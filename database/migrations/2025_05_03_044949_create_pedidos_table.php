@@ -15,6 +15,8 @@ return new class extends Migration
     {
         Schema::create('pedidos', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('tienda_id')->constrained()->onDelete('cascade');
+            $table->enum('estado', ['pendiente', 'procesado', 'enviado', 'entregado', 'cancelado'])->default('pendiente');
             $table->timestamps();
         });
     }

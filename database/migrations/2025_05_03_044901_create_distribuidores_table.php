@@ -15,6 +15,10 @@ return new class extends Migration
     {
         Schema::create('distribuidores', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('usuario_id')->constrained()->onDelete('cascade');
+            $table->string('nombre_empresa');
+            $table->string('direccion');
+            $table->string('telefono')->nullable();
             $table->timestamps();
         });
     }

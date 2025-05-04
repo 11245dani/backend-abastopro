@@ -15,6 +15,10 @@ return new class extends Migration
     {
         Schema::create('tiendas', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('usuario_id')->constrained()->onDelete('cascade');
+            $table->string('nombre');
+            $table->string('direccion');
+            $table->string('telefono')->nullable();
             $table->timestamps();
         });
     }

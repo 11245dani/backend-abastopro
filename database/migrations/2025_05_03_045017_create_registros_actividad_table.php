@@ -15,6 +15,9 @@ return new class extends Migration
     {
         Schema::create('registros_actividad', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('usuario_id')->constrained()->onDelete('cascade');
+            $table->string('accion');
+            $table->text('descripcion')->nullable();
             $table->timestamps();
         });
     }

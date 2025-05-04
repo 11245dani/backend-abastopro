@@ -13,10 +13,8 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('categorias', function (Blueprint $table) {
-            $table->id();
-            $table->string('nombre')->unique();
-            $table->timestamps();
+        Schema::table('personal_access_tokens', function (Blueprint $table) {
+            $table->timestamp('expires_at')->nullable()->after('abilities');
         });
     }
 
@@ -27,6 +25,8 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('categorias');
+        Schema::table('personal_access_tokens', function (Blueprint $table) {
+            $table->dropColumn('expires_at');
+        });
     }
 };
