@@ -19,7 +19,7 @@ return new class extends Migration
             $table->string('correo')->unique();
             $table->string('password');
             $table->enum('rol', ['admin', 'tendero', 'gestor_despacho']);
-            $table->enum('estado', ['activo', 'inactivo'])->default('activo');
+            $table->enum('estado', ['activo', 'inactivo'])->default('inactivo');
             $table->timestamps();
         });
         
