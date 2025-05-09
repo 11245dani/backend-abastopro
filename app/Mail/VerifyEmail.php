@@ -37,3 +37,4 @@ class VerifyEmail extends Mailable
                     ->with(['usuario' => $this->usuario]);
     }
 }
+

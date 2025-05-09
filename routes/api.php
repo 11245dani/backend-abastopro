@@ -14,6 +14,8 @@ Route::get('/verificar/{token}', [AuthController::class, 'verificarCorreoWeb']);
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/me', [AuthController::class, 'me']);
     Route::post('/logout', [AuthController::class, 'logout']);
+    Route::middleware('auth:sanctum')->put('/usuario/actualizar', [AuthController::class, 'actualizarUsuario']);
+
 });
 
 Route::middleware(['auth:sanctum', 'rol:admin'])->group(function () {
