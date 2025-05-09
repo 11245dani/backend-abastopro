@@ -11,6 +11,10 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Password;
+use Illuminate\Auth\Events\PasswordReset;
+use Illuminate\Support\Facades\URL;
+
 
 class AuthController extends Controller
 {
@@ -20,11 +24,18 @@ class AuthController extends Controller
             'nombre' => 'required|string|max:255',
             'correo' => 'required|email|unique:usuarios,correo',
             'password' => 'required|string|min:6',
-            'rol' => 'required|in:tendero,gestor_despacho,admin',
+            'rol' => 'required|in:tendero,gestor_despacho',
             'direccion' => 'required_if:rol,tendero|string|max:255',
             'nombre_empresa' => 'required_if:rol,gestor_despacho|string|max:255',
         ]);
     
+        // 🔒 Validación explícita adicional (opcional, pero útil)
+        if ($request->rol === 'admin') {
+        return response()->json([
+            'mensaje' => 'No está permitido registrarse con rol de administrador.'
+        ], 403);
+        }
+
         DB::beginTransaction();
     
         try {
@@ -131,5 +142,97 @@ class AuthController extends Controller
         return view('verificacion.resultado', ['mensaje' => 'Cuenta verificada exitosamente']);
     }
     
+
+
+
+public function actualizarUsuario(Request $request)
+{
+    $usuario = $request->user();
+
+    $reglas = [
+        'nombre' => 'sometimes|required|string|max:255',
+        'correo' => 'sometimes|required|email|unique:usuarios,correo,' . $usuario->id,
+        'password' => 'sometimes|required|string|min:6|confirmed', // password + password_confirmation
+    ];
+
+    if ($usuario->rol === 'tendero' || $usuario->rol === 'gestor_despacho') {
+        $reglas['direccion'] = 'sometimes|required|string|max:255';
+    }
+
+    if ($usuario->rol === 'gestor_despacho') {
+        $reglas['nombre_empresa'] = 'sometimes|required|string|max:255';
+    }
+
+    $request->validate($reglas);
+
+    $correoOriginal = $usuario->correo;
+
+    if ($request->has('nombre')) {
+        $usuario->nombre = $request->nombre;
+    }
+
+    if ($request->has('direccion')) {
+        $usuario->direccion = $request->direccion;
+    }
+
+    if ($usuario->rol === 'gestor_despacho' && $request->has('nombre_empresa')) {
+        $usuario->nombre_empresa = $request->nombre_empresa;
+    }
+
+    // Cambiar correo: se requiere verificación
+    if ($request->has('correo') && $request->correo !== $correoOriginal) {
+    $usuario->correo = $request->correo;
+    $usuario->estado = 'inactivo';
+    $usuario->verification_token = Str::random(60);
+    $usuario->email_verified_at = null;
+
+    $usuario->save();
+    $request->user()->currentAccessToken()->delete();
+
+    // Enviar correo personalizado para verificación
+    Mail::to($usuario->correo)->send(new \App\Mail\VerifyUpdatedEmail($usuario));
+
+    return response()->json([
+        'mensaje' => 'Estás actualizando tu correo electrónico. Tu sesión quedará inhabilitada mientras confirmas la nueva dirección de correo.',
+        'requiere_verificacion' => true,
+    ]);
+}
+
+
+    if ($request->has('password')) {
+        // Generar token manualmente
+        $token = Str::random(60);
+    
+        // Guardar token en tabla password_resets
+        DB::table('password_resets')->updateOrInsert(
+            ['email' => $usuario->correo],
+            [
+                'token' => $token,
+                'created_at' => now(),
+            ]
+        );
+    
+        // Construir URL de restablecimiento
+        $url = url('/restablecer-contrasena/' . $token);
+    
+        // Enviar correo usando tu clase personalizada
+        Mail::to($usuario->correo)->send(new \App\Mail\CustomResetPassword($url, $usuario->correo));
+    
+        return response()->json([
+            'mensaje' => 'Se ha enviado un enlace para cambiar tu contraseña al correo',
+            'requiere_verificacion' => $request->correo !== $correoOriginal,
+        ]);
+    }
+    
+
+    $usuario->save();
+
+    return response()->json([
+        'mensaje' => 'Información actualizada correctamente',
+        'requiere_verificacion' => $request->has('correo') && $request->correo !== $correoOriginal,
+        'usuario' => $usuario
+    ]);
+}
+
 
 }
