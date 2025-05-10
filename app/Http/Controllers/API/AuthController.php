@@ -14,7 +14,8 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Support\Facades\URL;
-
+use App\Notifications\NuevoUsuarioRegistrado;
+use Illuminate\Support\Facades\Notification;
 
 class AuthController extends Controller
 {
@@ -64,14 +65,21 @@ class AuthController extends Controller
                     'usuario_id' => $usuario->id,
                     'nombre_empresa' => $request->nombre_empresa,
                     'direccion' => $request->direccion,
+                     'estado_autorizacion' => 'pendiente', // 👈 Queda pendiente por aprobación
                 ]);
             }
     
             DB::commit();
-    
-            return response()->json([
-                'mensaje' => 'Registro exitoso. Revisa tu correo para verificar tu cuenta.',
-            ], 201);
+    // Notificar al administrador solo si es un gestor_despacho
+if ($usuario->rol === 'gestor_despacho') {
+    Notification::route('mail', 'admin@example.com')
+        ->notify(new NuevoUsuarioRegistrado($usuario));
+}
+
+return response()->json([
+    'token' => $usuario->createToken('auth_token')->plainTextToken,
+    'usuario' => $usuario
+], 201);
     
         } catch (\Exception $e) {
             DB::rollBack();
@@ -113,6 +121,14 @@ class AuthController extends Controller
             'rol' => $usuario->rol // <-- agregado
 
         ]);
+
+        if ($usuario->rol === 'gestor_despacho') {
+    $distribuidor = Distribuidor::where('usuario_id', $usuario->id)->first();
+
+    if ($distribuidor && $distribuidor->estado_autorizacion !== 'aprobado') {
+        return response()->json(['mensaje' => 'Tu cuenta aún no ha sido autorizada por un administrador.'], 403);
+    }
+}
     }
 
     public function logout(Request $request)
