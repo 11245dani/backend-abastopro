@@ -16,6 +16,7 @@ class Distribuidor extends Model
         'nombre_empresa',
         'direccion',
         'telefono',
+        'estado_autorizacion', // 👈 Añadido
     ];
 
     public function usuario()

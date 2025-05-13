@@ -20,6 +20,7 @@ return new class extends Migration
             $table->string('direccion');
             $table->string('telefono')->nullable();
             $table->timestamps();
+             $table->string('estado_autorizacion')->default('pendiente'); // 👈 Por defecto pendiente
         });
     }
 
