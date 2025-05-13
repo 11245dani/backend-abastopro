@@ -234,5 +234,46 @@ public function actualizarUsuario(Request $request)
     ]);
 }
 
+public function listarUsuarios(Request $request)
+{
+    $usuario = $request->user();
+
+    // Solo el administrador con rol "admin" y correo específico puede acceder
+    if ($usuario->rol !== 'admin' || $usuario->correo !== 'abastopro07@gmail.com') {
+        return response()->json(['mensaje' => 'Acceso no autorizado'], 403);
+    }
+
+    $query = Usuario::query()
+        ->where('id', '!=', $usuario->id); // Excluir al admin autenticado
+
+    //  Búsqueda por nombre o correo
+    if ($request->filled('buscar')) {
+        $buscar = $request->input('buscar');
+        $query->where(function ($q) use ($buscar) {
+            $q->where('nombre', 'like', "%{$buscar}%")
+              ->orWhere('correo', 'like', "%{$buscar}%");
+        });
+    }
+
+    //  Filtro por rol
+    if ($request->filled('rol')) {
+        $rol = $request->input('rol');
+        if (in_array($rol, ['tendero', 'gestor_despacho'])) {
+            $query->where('rol', $rol);
+        } else {
+            return response()->json(['mensaje' => 'Rol inválido.'], 400);
+        }
+    }
+
+    $usuarios = $query->get();
+
+    if ($usuarios->isEmpty()) {
+        return response()->json(['mensaje' => 'No se encontraron usuarios que coincidan con la búsqueda.'], 404);
+    }
+
+    return response()->json(['usuarios' => $usuarios], 200);
+}
+
+
 
 }

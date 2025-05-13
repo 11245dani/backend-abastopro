@@ -21,4 +21,6 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::middleware(['auth:sanctum', 'rol:admin'])->group(function () {
     Route::get('/usuarios', [UsuarioController::class, 'index']);
     Route::put('/usuarios/{id}', [UsuarioController::class, 'update']);
+    Route::middleware('auth:sanctum')->get('/usuarios', [AuthController::class, 'listarUsuarios']);
+
 });
