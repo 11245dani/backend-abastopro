@@ -72,7 +72,7 @@ class AuthController extends Controller
             DB::commit();
     // Notificar al administrador solo si es un gestor_despacho
 if ($usuario->rol === 'gestor_despacho') {
-    Notification::route('mail', 'admin@example.com')
+    Notification::route('mail', 'abastopro07@gmail.com')
         ->notify(new NuevoUsuarioRegistrado($usuario));
 }
 
@@ -94,42 +94,40 @@ return response()->json([
     
 
     public function login(Request $request)
-    {
-        $request->validate([
-            'correo' => 'required|email',
-            'password' => 'required'
-        ]);
+{
+    $request->validate([
+        'correo' => 'required|email',
+        'password' => 'required'
+    ]);
 
-        $usuario = Usuario::where('correo', $request->correo)->first();
+    $usuario = Usuario::where('correo', $request->correo)->first();
 
-        if (!$usuario || !Hash::check($request->password, $usuario->password)) {
-            return response()->json(['mensaje' => 'Credenciales inválidas'], 401);
-        }
-        
-        if ($usuario->estado !== 'activo') {
-            return response()->json(['mensaje' => 'Verifica tu correo antes de iniciar sesión'], 403);
-        }
-        
-        
-
-        // Opcional: Revocar tokens anteriores en cada login
-        $usuario->tokens()->delete();
-
-        return response()->json([
-            'token' => $usuario->createToken('auth_token')->plainTextToken,
-            'usuario' => $usuario,
-            'rol' => $usuario->rol // <-- agregado
-
-        ]);
-
-        if ($usuario->rol === 'gestor_despacho') {
-    $distribuidor = Distribuidor::where('usuario_id', $usuario->id)->first();
-
-    if ($distribuidor && $distribuidor->estado_autorizacion !== 'aprobado') {
-        return response()->json(['mensaje' => 'Tu cuenta aún no ha sido autorizada por un administrador.'], 403);
+    if (!$usuario || !Hash::check($request->password, $usuario->password)) {
+        return response()->json(['mensaje' => 'Credenciales inválidas'], 401);
     }
+
+    if ($usuario->estado !== 'activo') {
+        return response()->json(['mensaje' => 'Verifica tu correo antes de iniciar sesión'], 403);
+    }
+
+    // 👇 Nueva validación para gestor_despacho
+    if ($usuario->rol === 'gestor_despacho') {
+        $distribuidor = Distribuidor::where('usuario_id', $usuario->id)->first();
+
+        if (!$distribuidor || $distribuidor->estado_autorizacion !== 'aprobado') {
+            return response()->json(['mensaje' => 'Tu cuenta aún no ha sido autorizada por un administrador.'], 403);
+        }
+    }
+
+    // Revocar tokens anteriores en cada login
+    $usuario->tokens()->delete();
+
+    return response()->json([
+        'token' => $usuario->createToken('auth_token')->plainTextToken,
+        'usuario' => $usuario,
+        'rol' => $usuario->rol // <-- agregado
+    ]);
 }
-    }
 
     public function logout(Request $request)
     {
