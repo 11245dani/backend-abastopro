@@ -17,12 +17,15 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/me', [AuthController::class, 'me']);
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::middleware('auth:sanctum')->put('/usuario/actualizar', [AuthController::class, 'actualizarUsuario']);
+    Route::put('/admin/aprobar-gestor-despacho/{id}', [AdminController::class, 'aprobarGestorDespacho']);
 
 });
 
 Route::middleware(['auth:sanctum', 'rol:admin'])->group(function () {
     Route::get('/usuarios', [UsuarioController::class, 'index']);
     Route::put('/usuarios/{id}', [UsuarioController::class, 'update']);
+    Route::middleware('auth:sanctum')->get('/usuarios', [AuthController::class, 'listarUsuarios']);
+
 });
 
 Route::middleware(['auth:sanctum', 'es_admin'])->put('/usuarios/{id}/cambiar-rol', [UsuarioController::class, 'cambiarRol']);

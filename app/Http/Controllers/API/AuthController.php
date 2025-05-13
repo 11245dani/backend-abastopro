@@ -14,7 +14,8 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Support\Facades\URL;
-
+use App\Notifications\NuevoUsuarioRegistrado;
+use Illuminate\Support\Facades\Notification;
 
 class AuthController extends Controller
 {
@@ -64,14 +65,21 @@ class AuthController extends Controller
                     'usuario_id' => $usuario->id,
                     'nombre_empresa' => $request->nombre_empresa,
                     'direccion' => $request->direccion,
+                     'estado_autorizacion' => 'pendiente', // 👈 Queda pendiente por aprobación
                 ]);
             }
     
             DB::commit();
-    
-            return response()->json([
-                'mensaje' => 'Registro exitoso. Revisa tu correo para verificar tu cuenta.',
-            ], 201);
+    // Notificar al administrador solo si es un gestor_despacho
+if ($usuario->rol === 'gestor_despacho') {
+    Notification::route('mail', 'abastopro07@gmail.com')
+        ->notify(new NuevoUsuarioRegistrado($usuario));
+}
+
+return response()->json([
+    'token' => $usuario->createToken('auth_token')->plainTextToken,
+    'usuario' => $usuario
+], 201);
     
         } catch (\Exception $e) {
             DB::rollBack();
@@ -86,34 +94,40 @@ class AuthController extends Controller
     
 
     public function login(Request $request)
-    {
-        $request->validate([
-            'correo' => 'required|email',
-            'password' => 'required'
-        ]);
+{
+    $request->validate([
+        'correo' => 'required|email',
+        'password' => 'required'
+    ]);
 
-        $usuario = Usuario::where('correo', $request->correo)->first();
+    $usuario = Usuario::where('correo', $request->correo)->first();
 
-        if (!$usuario || !Hash::check($request->password, $usuario->password)) {
-            return response()->json(['mensaje' => 'Credenciales inválidas'], 401);
-        }
-        
-        if ($usuario->estado !== 'activo') {
-            return response()->json(['mensaje' => 'Verifica tu correo antes de iniciar sesión'], 403);
-        }
-        
-        
-
-        // Opcional: Revocar tokens anteriores en cada login
-        $usuario->tokens()->delete();
-
-        return response()->json([
-            'token' => $usuario->createToken('auth_token')->plainTextToken,
-            'usuario' => $usuario,
-            'rol' => $usuario->rol // <-- agregado
-
-        ]);
+    if (!$usuario || !Hash::check($request->password, $usuario->password)) {
+        return response()->json(['mensaje' => 'Credenciales inválidas'], 401);
     }
+
+    if ($usuario->estado !== 'activo') {
+        return response()->json(['mensaje' => 'Verifica tu correo antes de iniciar sesión'], 403);
+    }
+
+    // 👇 Nueva validación para gestor_despacho
+    if ($usuario->rol === 'gestor_despacho') {
+        $distribuidor = Distribuidor::where('usuario_id', $usuario->id)->first();
+
+        if (!$distribuidor || $distribuidor->estado_autorizacion !== 'aprobado') {
+            return response()->json(['mensaje' => 'Tu cuenta aún no ha sido autorizada por un administrador.'], 403);
+        }
+    }
+
+    // Revocar tokens anteriores en cada login
+    $usuario->tokens()->delete();
+
+    return response()->json([
+        'token' => $usuario->createToken('auth_token')->plainTextToken,
+        'usuario' => $usuario,
+        'rol' => $usuario->rol // <-- agregado
+    ]);
+}
 
     public function logout(Request $request)
     {
@@ -233,6 +247,47 @@ public function actualizarUsuario(Request $request)
         'usuario' => $usuario
     ]);
 }
+
+public function listarUsuarios(Request $request)
+{
+    $usuario = $request->user();
+
+    // Solo el administrador con rol "admin" y correo específico puede acceder
+    if ($usuario->rol !== 'admin' || $usuario->correo !== 'abastopro07@gmail.com') {
+        return response()->json(['mensaje' => 'Acceso no autorizado'], 403);
+    }
+
+    $query = Usuario::query()
+        ->where('id', '!=', $usuario->id); // Excluir al admin autenticado
+
+    //  Búsqueda por nombre o correo
+    if ($request->filled('buscar')) {
+        $buscar = $request->input('buscar');
+        $query->where(function ($q) use ($buscar) {
+            $q->where('nombre', 'like', "%{$buscar}%")
+              ->orWhere('correo', 'like', "%{$buscar}%");
+        });
+    }
+
+    //  Filtro por rol
+    if ($request->filled('rol')) {
+        $rol = $request->input('rol');
+        if (in_array($rol, ['tendero', 'gestor_despacho'])) {
+            $query->where('rol', $rol);
+        } else {
+            return response()->json(['mensaje' => 'Rol inválido.'], 400);
+        }
+    }
+
+    $usuarios = $query->get();
+
+    if ($usuarios->isEmpty()) {
+        return response()->json(['mensaje' => 'No se encontraron usuarios que coincidan con la búsqueda.'], 404);
+    }
+
+    return response()->json(['usuarios' => $usuarios], 200);
+}
+
 
 
 }

@@ -19,4 +19,9 @@ class Usuario extends Authenticatable
     protected $hidden = [
         'password', 'remember_token'
     ];
+
+    public function routeNotificationForMail()
+{
+    return $this->correo;
+}
 }
