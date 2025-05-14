@@ -102,38 +102,8 @@ return response()->json([
 
     $usuario = Usuario::where('correo', $request->correo)->first();
 
-<<<<<<< Updated upstream
     if (!$usuario || !Hash::check($request->password, $usuario->password)) {
         return response()->json(['mensaje' => 'Credenciales inválidas'], 401);
-=======
-        if (!$usuario || !Hash::check($request->password, $usuario->password)) {
-            return response()->json(['mensaje' => 'Credenciales inválidas'], 401);
-        }
-        
-        if ($usuario->estado !== 'activo') {
-            return response()->json(['mensaje' => 'Verifica tu correo antes de iniciar sesión'], 403);
-        }
-        
-        
-
-        // Opcional: Revocar tokens anteriores en cada login
-        $usuario->tokens()->delete();
-
-        return response()->json([
-            'token' => $usuario->createToken('auth_token')->plainTextToken,
-            'usuario' => $usuario,
-            'rol' => $usuario->rol // <-- agregado
-
-        ]);
-
-        if ($usuario->rol === 'gestor_despacho') {
-    $distribuidor = Distribuidor::where('usuario_id', $usuario->id)->first();
-
-    if ($distribuidor && $distribuidor->estado_autorizacion !== 'aprobado') {
-        return response()->json(['mensaje' => 'Tu cuenta aún no ha sido autorizada por un administrador.'], 403);
-    }
-}
->>>>>>> Stashed changes
     }
 
     if ($usuario->estado !== 'activo') {
