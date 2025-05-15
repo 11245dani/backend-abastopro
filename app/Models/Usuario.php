@@ -24,4 +24,23 @@ class Usuario extends Authenticatable
 {
     return $this->correo;
 }
+
+// Usuario.php
+public function tendero()
+{
+    return $this->hasOne(Tendero::class);
 }
+
+public function distribuidor()
+{
+    return $this->hasOne(Distribuidor::class);
+}
+
+
+
+}
+
+
+
+
+

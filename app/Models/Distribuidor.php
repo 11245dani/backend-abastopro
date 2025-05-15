@@ -23,4 +23,10 @@ class Distribuidor extends Model
     {
         return $this->belongsTo(Usuario::class);
     }
+
+    public function productos()
+    {
+    return $this->hasMany(Producto::class);
+    }
+
 }

@@ -21,13 +21,18 @@ class AuthController extends Controller
 {
     public function register(Request $request)
     {
+        \Log::info('Datos recibidos en registro', $request->all());
+
         $request->validate([
             'nombre' => 'required|string|max:255',
             'correo' => 'required|email|unique:usuarios,correo',
             'password' => 'required|string|min:6',
             'rol' => 'required|in:tendero,gestor_despacho',
             'direccion' => 'required_if:rol,tendero|string|max:255',
-            'nombre_empresa' => 'required_if:rol,gestor_despacho|string|max:255',
+            'telefono' => 'required|string|max:20',
+            //'nombre_empresa' => 'required_if:rol,gestor_despacho|string|max:255',
+            'nombre_empresa' => $request->rol === 'gestor_despacho' ? 'required|string' : 'nullable|string',
+
         ]);
     
         // 🔒 Validación explícita adicional (opcional, pero útil)
@@ -59,12 +64,14 @@ class AuthController extends Controller
                     'usuario_id' => $usuario->id,
                     'nombre' => $usuario->nombre,
                     'direccion' => $request->direccion,
+                    'telefono' => $request->telefono,
                 ]);
             } elseif ($usuario->rol === 'gestor_despacho') {
                 Distribuidor::create([
                     'usuario_id' => $usuario->id,
                     'nombre_empresa' => $request->nombre_empresa,
                     'direccion' => $request->direccion,
+                    'telefono' => $request->telefono,
                      'estado_autorizacion' => 'pendiente', // 👈 Queda pendiente por aprobación
                 ]);
             }
@@ -157,8 +164,6 @@ return response()->json([
     }
     
 
-
-
 public function actualizarUsuario(Request $request)
 {
     $usuario = $request->user();
@@ -166,10 +171,10 @@ public function actualizarUsuario(Request $request)
     $reglas = [
         'nombre' => 'sometimes|required|string|max:255',
         'correo' => 'sometimes|required|email|unique:usuarios,correo,' . $usuario->id,
-        'password' => 'sometimes|required|string|min:6|confirmed', // password + password_confirmation
+        'password' => 'sometimes|required|string|min:6|confirmed',
     ];
 
-    if ($usuario->rol === 'tendero' || $usuario->rol === 'gestor_despacho') {
+    if (in_array($usuario->rol, ['tendero', 'gestor_despacho'])) {
         $reglas['direccion'] = 'sometimes|required|string|max:255';
     }
 
@@ -180,6 +185,7 @@ public function actualizarUsuario(Request $request)
     $request->validate($reglas);
 
     $correoOriginal = $usuario->correo;
+    $correoModificado = $request->has('correo') && strcasecmp($request->correo, $correoOriginal) !== 0;
 
     if ($request->has('nombre')) {
         $usuario->nombre = $request->nombre;
@@ -193,60 +199,32 @@ public function actualizarUsuario(Request $request)
         $usuario->nombre_empresa = $request->nombre_empresa;
     }
 
-    // Cambiar correo: se requiere verificación
-    if ($request->has('correo') && $request->correo !== $correoOriginal) {
-    $usuario->correo = $request->correo;
-    $usuario->estado = 'inactivo';
-    $usuario->verification_token = Str::random(60);
-    $usuario->email_verified_at = null;
+    if ($correoModificado) {
+        $usuario->correo = $request->correo;
+        $usuario->estado = 'inactivo';
+        $usuario->verification_token = Str::random(60);
+        $usuario->email_verified_at = null;
 
-    $usuario->save();
-    $request->user()->currentAccessToken()->delete();
+        $usuario->save();
+        $request->user()->currentAccessToken()->delete();
 
-    // Enviar correo personalizado para verificación
-    Mail::to($usuario->correo)->send(new \App\Mail\VerifyUpdatedEmail($usuario));
+        Mail::to($usuario->correo)->send(new \App\Mail\VerifyUpdatedEmail($usuario));
 
-    return response()->json([
-        'mensaje' => 'Estás actualizando tu correo electrónico. Tu sesión quedará inhabilitada mientras confirmas la nueva dirección de correo.',
-        'requiere_verificacion' => true,
-    ]);
-}
-
-
-    if ($request->has('password')) {
-        // Generar token manualmente
-        $token = Str::random(60);
-    
-        // Guardar token en tabla password_resets
-        DB::table('password_resets')->updateOrInsert(
-            ['email' => $usuario->correo],
-            [
-                'token' => $token,
-                'created_at' => now(),
-            ]
-        );
-    
-        // Construir URL de restablecimiento
-        $url = url('/restablecer-contrasena/' . $token);
-    
-        // Enviar correo usando tu clase personalizada
-        Mail::to($usuario->correo)->send(new \App\Mail\CustomResetPassword($url, $usuario->correo));
-    
         return response()->json([
-            'mensaje' => 'Se ha enviado un enlace para cambiar tu contraseña al correo',
-            'requiere_verificacion' => $request->correo !== $correoOriginal,
+            'mensaje' => 'Estás actualizando tu correo electrónico. Tu sesión quedará inhabilitada mientras confirmas la nueva dirección de correo.',
+            'requiere_verificacion' => true,
         ]);
     }
-    
 
     $usuario->save();
 
     return response()->json([
         'mensaje' => 'Información actualizada correctamente',
-        'requiere_verificacion' => $request->has('correo') && $request->correo !== $correoOriginal,
+        'requiere_verificacion' => false,
         'usuario' => $usuario
     ]);
 }
+
 
 public function listarUsuarios(Request $request)
 {

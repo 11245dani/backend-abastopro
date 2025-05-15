@@ -66,6 +66,8 @@ class Kernel extends HttpKernel
         'rol' => \App\Http\Middleware\RolMiddleware::class,
         'auth' => \App\Http\Middleware\Authenticate::class,
         'es_admin' => \App\Http\Middleware\EsAdmin::class,
+        'gestor' => \App\Http\Middleware\RolGestorDespacho::class,
+
 
     ];
 }
