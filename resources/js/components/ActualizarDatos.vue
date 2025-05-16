@@ -67,7 +67,6 @@ const enviarFormulario = async () => {
   
   if (form.correo.toLowerCase() !== usuario.correo.toLowerCase()) datosActualizados.correo = form.correo;
   if (form.nombre !== usuario.nombre) datosActualizados.nombre = form.nombre;
-  if (correoCambio.value) datosActualizados.correo = form.correo;
   if (form.direccion !== usuario.direccion)
     datosActualizados.direccion = form.direccion;
   if (form.nombre_empresa !== usuario.nombre_empresa)

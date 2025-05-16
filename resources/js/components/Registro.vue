@@ -1,6 +1,8 @@
 <template>
+
+  <a href="/" class="back-link">&larr; Volver al inicio</a>
   <div class="container">
-    <a href="/" class="back-link">&larr; Volver al inicio</a>
+    
 
     <div class="logo">
       <img src="@/images/Logo.jpeg" alt="Logo de la empresa" />

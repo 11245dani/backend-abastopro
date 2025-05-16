@@ -16,6 +16,8 @@ use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Support\Facades\URL;
 use App\Notifications\NuevoUsuarioRegistrado;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Log;
+
 
 class AuthController extends Controller
 {
@@ -167,6 +169,8 @@ return response()->json([
 public function actualizarUsuario(Request $request)
 {
     $usuario = $request->user();
+ 
+    Log::info('Actualizando usuario: ' . $usuario->id);
 
     $reglas = [
         'nombre' => 'sometimes|required|string|max:255',
@@ -195,9 +199,13 @@ public function actualizarUsuario(Request $request)
         $usuario->direccion = $request->direccion;
     }
 
-    if ($usuario->rol === 'gestor_despacho' && $request->has('nombre_empresa')) {
-        $usuario->nombre_empresa = $request->nombre_empresa;
+ if ($usuario->rol === 'gestor') {
+    $distribuidor = $usuario->distribuidor;
+    if ($distribuidor) {
+        $distribuidor->nombre_empresa = $request->input('nombre_empresa');
+        $distribuidor->save();
     }
+}
 
     if ($correoModificado) {
         $usuario->correo = $request->correo;
@@ -206,9 +214,15 @@ public function actualizarUsuario(Request $request)
         $usuario->email_verified_at = null;
 
         $usuario->save();
+        if ($request->user()->currentAccessToken()) {
         $request->user()->currentAccessToken()->delete();
+        }
+
 
         Mail::to($usuario->correo)->send(new \App\Mail\VerifyUpdatedEmail($usuario));
+
+        Log::info('Usuario actualizado con éxito');
+
 
         return response()->json([
             'mensaje' => 'Estás actualizando tu correo electrónico. Tu sesión quedará inhabilitada mientras confirmas la nueva dirección de correo.',
@@ -223,6 +237,11 @@ public function actualizarUsuario(Request $request)
         'requiere_verificacion' => false,
         'usuario' => $usuario
     ]);
+
+       {
+        Log::error('Error al actualizar usuario: ' . $e->getMessage());
+        return response()->json(['error' => 'Error interno'], 500);
+    }
 }
 
 

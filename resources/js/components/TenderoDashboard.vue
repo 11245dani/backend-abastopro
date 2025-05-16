@@ -1,5 +1,6 @@
 <template>
   <div class="dashboard">
+    <!-- Header -->
     <header class="header">
       <div class="logo-text">
         <img src="@/images/Logo.jpeg" alt="Logo AbastoPro" />
@@ -17,10 +18,27 @@
       </div>
     </header>
 
-    <main class="contenido">
-      <h1>Bienvenido, {{ nombreUsuario }}</h1>
-      <!-- Aquí va el contenido del dashboard -->
-    </main>
+    <!-- Contenedor principal: panel lateral + contenido -->
+    <div class="main-container">
+      <!-- Panel lateral -->
+      <aside class="Tendero-panel">
+        <div class="logo-text">
+          <img src="@/images/Logo.jpeg" alt="Logo AbastoPro" />
+        </div>
+        <ul class="menu">
+          <li @click="irAProductos">Productos</li>
+        </ul>
+      </aside>
+
+      <!-- Contenido principal -->
+      <main class="contenido">
+        <div class="contenido-header">
+          <h1 class="bienvenida">Bienvenido, {{ nombreUsuario }}</h1>
+          <button class="btn-ver" @click="verCatalogo">Ver catálogo</button>
+        </div>
+        <!-- Aquí va el contenido adicional del dashboard -->
+      </main>
+    </div>
   </div>
 </template>
 
@@ -28,10 +46,9 @@
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 
-const showMenu = ref(false);
 const router = useRouter();
+const showMenu = ref(false);
 
-// Recuperar los datos del usuario desde localStorage
 const usuarioData = JSON.parse(localStorage.getItem('usuario')) || {};
 const nombreUsuario = usuarioData.nombre || 'Usuario';
 
@@ -53,9 +70,53 @@ const cerrarSesion = () => {
   localStorage.removeItem('rol');
   router.push('/login');
 };
+
+const irAProductos = () => {
+  router.push('/catalogo'); // Ajusta según tu ruta real
+};
+
+const verCatalogo = () => {
+  router.push('/catalogo'); // Ajusta según tu ruta real
+};
 </script>
 
 <style scoped>
+.dashboard {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.main-container {
+  display: flex;
+  flex-grow: 1;
+}
+
+/* Panel lateral */
+.Tendero-panel {
+  background-color: white;
+  padding: 20px;
+  width: 220px;
+  border-right: 1px solid #ddd;
+  box-sizing: border-box;
+}
+
+.menu {
+  list-style: none;
+  padding: 0;
+  margin-top: 20px;
+}
+
+.menu li {
+  padding: 10px;
+  cursor: pointer;
+}
+
+.menu li:hover {
+  background-color: #e6e6e6;
+}
+
+/* Header */
 .header {
   display: flex;
   justify-content: space-between;
@@ -115,7 +176,38 @@ const cerrarSesion = () => {
   background-color: #f0f0f0;
 }
 
+/* Contenido */
 .contenido {
   padding: 30px;
+  flex-grow: 1;
+  box-sizing: border-box;
+}
+
+.contenido-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.bienvenida {
+  font-size: 18px;
+  font-weight: 500;
+  margin: 0;
+}
+
+.btn-ver {
+  background-color: black;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.btn-ver:hover {
+  background-color: #333;
 }
 </style>

@@ -29,4 +29,5 @@ class Distribuidor extends Model
     return $this->hasMany(Producto::class);
     }
 
+
 }

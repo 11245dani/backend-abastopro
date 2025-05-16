@@ -8,6 +8,10 @@ import GestorDashboard from './components/GestorDashboard.vue';
 import MiPerfil from './components/MiPerfil.vue';
 import ListarUsuarios from './components/ListarUsuarios.vue'; // Asegúrate del path
 import ActualizarDatos from './components/ActualizarDatos.vue'; // Asegúrate del path
+import CrearProducto from './components/CrearProducto.vue';
+import MisProductos from './components/MisProductos.vue';
+import CatalogoProductos from './components/CatalogoProductos.vue';
+
 
 
 const routes = [
@@ -16,6 +20,14 @@ const routes = [
   { path: '/login', component: Login },
   { path: '/admin/usuarios', component: ListarUsuarios },
   { path: '/actualizar-datos', component: ActualizarDatos },
+  { path: '/CrearProducto', component: CrearProducto },
+  {path: '/MisProductos', component: MisProductos},
+
+    {
+    path: '/catalogo',
+    name: 'CatalogoProductos',
+    component: CatalogoProductos
+  },
 
 
    {

@@ -99,29 +99,65 @@ public function destroy(Producto $producto)
     return response()->json(['message' => 'Producto desactivado']);
 }
 
-public function listarDisponibles()
+public function listarDisponibles(Request $request)
 {
-    $productos = Producto::where('estado', 'activo')
+    $query = Producto::where('estado', 'activo')
         ->with([
             'categoria:id,nombre',
             'marca:id,nombre',
             'distribuidor:id,nombre_empresa'
-        ])
-        ->get()
-        ->map(function ($producto) {
-            return [
-                'id' => $producto->id,
-                'nombre' => $producto->nombre,
-                'descripcion' => $producto->descripcion,
-                'precio' => $producto->precio,
-                'stock' => $producto->stock,
-                'categoria' => $producto->categoria->nombre ?? null,
-                'marca' => $producto->marca->nombre ?? null,
-                'distribuidor' => $producto->distribuidor->nombre_empresa ?? null,
-            ];
+        ]);
+
+    // Filtro por búsqueda (nombre o descripción)
+    if ($request->filled('busqueda')) {
+        $busqueda = $request->input('busqueda');
+        $query->where(function ($q) use ($busqueda) {
+            $q->where('nombre', 'like', "%$busqueda%")
+              ->orWhere('descripcion', 'like', "%$busqueda%");
         });
+    }
+
+    // Filtro por categoría
+    if ($request->filled('categoria_id')) {
+        $query->where('categoria_id', $request->categoria_id);
+    }
+
+    // Filtro por marca
+    if ($request->filled('marca_id')) {
+        $query->where('marca_id', $request->marca_id);
+    }
+
+    // Filtro por distribuidor
+    if ($request->filled('distribuidor_id')) {
+        $query->where('distribuidor_id', $request->distribuidor_id);
+    }
+
+    // Filtro por rango de precios
+    if ($request->filled('precio_min')) {
+        $query->where('precio', '>=', $request->precio_min);
+    }
+
+    if ($request->filled('precio_max')) {
+        $query->where('precio', '<=', $request->precio_max);
+    }
+
+    // Obtener resultados
+    $productos = $query->get()->map(function ($producto) {
+        return [
+            'id' => $producto->id,
+            'nombre' => $producto->nombre,
+            'descripcion' => $producto->descripcion,
+            'precio' => $producto->precio,
+            'stock' => $producto->stock,
+            'categoria' => $producto->categoria->nombre ?? null,
+            'marca' => $producto->marca->nombre ?? null,
+            'distribuidor' => $producto->distribuidor->nombre_empresa ?? null,
+            'imagen_url' => $producto->imagen_url ?? null,
+        ];
+    });
 
     return response()->json($productos);
 }
+
 
 }
