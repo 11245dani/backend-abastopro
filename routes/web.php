@@ -29,3 +29,15 @@ Route::post('/restablecer-contrasena', [ResetPasswordController::class, 'cambiar
 Route::get('/{any}', function () {
     return view('home');
 })->where('any', '.*');
+
+Route::get('/reset-password/{token}', [ResetPasswordController::class, 'showResetForm'])
+    ->middleware('guest')
+    ->name('password.reset');
+
+Route::post('/reset-password', [ResetPasswordController::class, 'resetPassword'])
+    ->middleware('web')
+    ->name('password.update');
+
+Route::get('/reset-password-exito', function () {
+    return view('auth.reset-password-exito');
+})->name('reset.password.success');;

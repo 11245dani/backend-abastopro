@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Notifications\Notifiable;
+use App\Notifications\RecuperarContrasena;
 
 class Usuario extends Authenticatable
 {
@@ -21,15 +22,32 @@ class Usuario extends Authenticatable
     ];
 
     public function routeNotificationForMail()
+    {
+        return $this->correo;
+    }
+
+    public function getEmailForPasswordReset()
+    {
+        return $this->correo;
+    }
+
+    public function sendPasswordResetNotification($token)
 {
-    return $this->correo;
+    $this->notify(new RecuperarContrasena($token, $this->correo));
 }
 
 // Usuario.php
 public function tendero()
 {
     return $this->hasOne(Tendero::class);
+}    
+
+public function getAuthIdentifierName()
+{
+    return 'correo';
 }
+
+
 
 public function distribuidor()
 {

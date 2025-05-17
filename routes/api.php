@@ -8,6 +8,8 @@ use App\Http\Controllers\API\AdminController;
 use App\Http\Controllers\ProductoController;
 use App\Http\Controllers\CategoriaController;
 use App\Http\Controllers\MarcaController;
+use App\Http\Controllers\API\ForgotPasswordController;
+use App\Http\Controllers\ResetPasswordController;
 
 
 Route::post('/register', [AuthController::class, 'register']);
@@ -59,4 +61,7 @@ Route::middleware(['auth:sanctum', 'gestor'])->group(function () {
     Route::delete('/productos/{producto}', [ProductoController::class, 'destroy']);
 
 });
+
+Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLinkEmail']);
+
 
