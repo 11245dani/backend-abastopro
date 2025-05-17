@@ -13,7 +13,7 @@ class Usuario extends Authenticatable
     protected $table = 'usuarios';
 
     protected $fillable = [
-        'nombre', 'correo', 'password', 'rol', 'estado'
+        'nombre', 'correo', 'password', 'rol', 'estado', 'direccion', 'nombre_empresa', 'verification_token'
     ];
 
     protected $hidden = [
@@ -24,4 +24,21 @@ class Usuario extends Authenticatable
 {
     return $this->correo;
 }
+
+// Usuario.php
+public function tendero()
+{
+    return $this->hasOne(Tendero::class);
 }
+
+public function distribuidor()
+{
+    return $this->hasOne(Distribuidor::class);
+}
+
+}
+
+
+
+
+

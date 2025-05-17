@@ -5,12 +5,24 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\API\UsuarioController;
 use App\Http\Controllers\API\AdminController;
+use App\Http\Controllers\ProductoController;
+use App\Http\Controllers\CategoriaController;
+use App\Http\Controllers\MarcaController;
 
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::get('/verificar/{token}', [AuthController::class, 'verificarCorreo']);
 Route::get('/verificar/{token}', [AuthController::class, 'verificarCorreoWeb']);
+
+Route::get('/categorias', [CategoriaController::class, 'index']);
+Route::get('/marcas', [MarcaController::class, 'index']);
+Route::post('marcas', [MarcaController::class, 'store']);
+Route::post('categorias', [CategoriaController::class, 'store']);
+
+
+Route::get('/productos-disponibles', [ProductoController::class, 'listarDisponibles']);
+
 
 
 Route::middleware('auth:sanctum')->group(function () {
@@ -39,4 +51,12 @@ Route::middleware(['auth:sanctum', 'es_admin'])->group(function () {
 
 Route::get('/admin/solicitudes-pendientes', [AdminController::class, 'listarSolicitudesPendientes']);
 Route::post('/admin/rechazar-cambio-rol/{id}', [AdminController::class, 'rechazarCambioRol']);
+
+Route::middleware(['auth:sanctum', 'gestor'])->group(function () {
+    Route::get('/productos', [ProductoController::class, 'index']);
+    Route::post('/productos', [ProductoController::class, 'store']);
+    Route::put('/productos/{producto}', [ProductoController::class, 'update']);
+    Route::delete('/productos/{producto}', [ProductoController::class, 'destroy']);
+
+});
 
