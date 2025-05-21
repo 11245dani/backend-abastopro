@@ -26,9 +26,6 @@ Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name
 Route::get('/restablecer-contrasena/{token}', [ResetPasswordController::class, 'mostrarFormulario'])->name('password.reset');
 Route::post('/restablecer-contrasena', [ResetPasswordController::class, 'cambiarContrasena'])->name('password.update');
 
-Route::get('/{any}', function () {
-    return view('home');
-})->where('any', '.*');
 
 Route::get('/reset-password/{token}', [ResetPasswordController::class, 'showResetForm'])
     ->middleware('guest')
@@ -41,3 +38,7 @@ Route::post('/reset-password', [ResetPasswordController::class, 'resetPassword']
 Route::get('/reset-password-exito', function () {
     return view('auth.reset-password-exito');
 })->name('reset.password.success');;
+
+Route::get('/{any}', function () {
+    return view('home');
+})->where('any', '.*');
