@@ -66,6 +66,8 @@
 import { ref, computed, onMounted } from 'vue';
 import axios from 'axios';
 
+axios.defaults.baseURL = 'http://127.0.0.1:8000';
+
 const usuarios = ref([]);
 const busqueda = ref('');
 const filtroRol = ref('');
@@ -115,15 +117,19 @@ const verUsuario = (usuario) => {
 };
 
 const aprobarGestor = async (usuario) => {
+  const token = localStorage.getItem('token');
+
   if (!confirm(`¿Estás seguro de aprobar a ${usuario.nombre}?`)) return;
+
 
   try {
     const response = await axios.put(
-      `http://localhost:8000/api/admin/aprobar-gestor-despacho/${usuario.id}`,
+      `/api/admin/aprobar-gestor-despacho/${usuario.id}`,
       {},
       {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
+          Authorization: `Bearer ${token}`,
+          Accept: 'application/json',
         },
       }
     );

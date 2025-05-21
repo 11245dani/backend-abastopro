@@ -10,7 +10,8 @@ use App\Http\Controllers\CategoriaController;
 use App\Http\Controllers\MarcaController;
 use App\Http\Controllers\API\ForgotPasswordController;
 use App\Http\Controllers\ResetPasswordController;
-
+use App\Http\Controllers\CarritoController;
+use App\Http\Controllers\PedidoControllerr;
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
@@ -22,9 +23,14 @@ Route::get('/marcas', [MarcaController::class, 'index']);
 Route::post('marcas', [MarcaController::class, 'store']);
 Route::post('categorias', [CategoriaController::class, 'store']);
 
+Route::middleware('auth:sanctum')->put('/pedidos/{id}/estado', [PedidoControllerr::class, 'actualizarEstado']);
 
 Route::get('/productos-disponibles', [ProductoController::class, 'listarDisponibles']);
 
+Route::middleware('auth:sanctum')->get('/historial-pedidos', [PedidoControllerr::class, 'historialPedidosTienda']);
+
+// routes/api.php
+Route::middleware('auth:sanctum')->patch('/pedidos/{id}/estado', [PedidoControllerr::class, 'cambiarEstado']);
 
 
 Route::middleware('auth:sanctum')->group(function () {
@@ -32,6 +38,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::middleware('auth:sanctum')->put('/usuario/actualizar', [AuthController::class, 'actualizarUsuario']);
     Route::put('/admin/aprobar-gestor-despacho/{id}', [AdminController::class, 'aprobarGestorDespacho']);
+     Route::get('/carrito', [CarritoController::class, 'ver']);
+    Route::post('/carrito/agregar', [CarritoController::class, 'agregar']);
+    Route::delete('/carrito/eliminar/{item}', [CarritoController::class, 'eliminar']);
+    Route::post('/carrito/confirmar', [CarritoController::class, 'confirmar']);
+    Route::get('/pedidos-distribuidor', [PedidoControllerr::class, 'pedidosDistribuidor']);
 
 });
 

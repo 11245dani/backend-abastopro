@@ -29,6 +29,7 @@
         </div>
         <ul class="menu">
           <li @click="irADashboard">Mis productos</li>
+           <li @click="irAPedidos">Pedidos</li> <!-- Cambio aquí -->
         </ul>
       </aside>
 
@@ -112,6 +113,10 @@ const irADashboard = () => {
 
 const añadirProducto = () => {
   router.push('/CrearProducto');
+};
+
+const irAPedidos = () => {
+  router.push('/Pedidos');  // Navega a la nueva ruta para pedidos
 };
 
 const irAProductos = () => {

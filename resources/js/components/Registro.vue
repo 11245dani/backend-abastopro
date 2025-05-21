@@ -52,6 +52,7 @@
 
 <script setup>
 import { ref } from 'vue'
+import axios from 'axios'
 
 const form = ref({
   nombre: '',
@@ -73,42 +74,22 @@ function setRol(rol) {
 async function registrarUsuario() {
   mensaje.value = ''
 
-  // Copiamos el formulario para modificarlo sin afectar el `ref`
   const payload = { ...form.value }
 
-  // Limpiar campos que no aplican según el rol
   if (payload.rol === 'tendero') {
     delete payload.nombre_empresa
   }
 
   try {
-    const res = await fetch('http://127.0.0.1:8000/api/register', {
-      method: 'POST',
+    const res = await axios.post('http://127.0.0.1:8000/api/register', payload, {
       headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-        'X-Requested-With': 'XMLHttpRequest'
-      },
-      body: JSON.stringify(payload)
-    })
-
-    const data = await res.json()
-
-    if (!res.ok) {
-      if (data.errors) {
-        const errores = Object.values(data.errors).flat().join(', ')
-        throw new Error(errores)
-      } else if (data.mensaje) {
-        throw new Error(data.mensaje)
-      } else {
-        throw new Error('Error desconocido')
+        Accept: 'application/json'
       }
-    }
+    })
 
     mensaje.value = '¡Registro exitoso! Verifica tu correo electrónico.'
     mensajeColor.value = 'green'
 
-    // Resetear formulario
     form.value = {
       nombre: '',
       correo: '',
@@ -119,7 +100,14 @@ async function registrarUsuario() {
       telefono: ''
     }
   } catch (error) {
-    mensaje.value = error.message
+    if (error.response?.data?.errors) {
+      const errores = Object.values(error.response.data.errors).flat().join(', ')
+      mensaje.value = errores
+    } else if (error.response?.data?.mensaje) {
+      mensaje.value = error.response.data.mensaje
+    } else {
+      mensaje.value = 'Error desconocido'
+    }
     mensajeColor.value = 'red'
   }
 }

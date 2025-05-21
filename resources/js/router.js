@@ -11,6 +11,9 @@ import ActualizarDatos from './components/ActualizarDatos.vue'; // Asegúrate de
 import CrearProducto from './components/CrearProducto.vue';
 import MisProductos from './components/MisProductos.vue';
 import CatalogoProductos from './components/CatalogoProductos.vue';
+import CarritoVista from './components/CarritoVista.vue';
+import Pedidos from './components/Pedidos.vue';  // importa el nuevo componente
+import HistorialPedidos from './components/HistorialPedidos.vue';
 
 
 
@@ -22,6 +25,16 @@ const routes = [
   { path: '/actualizar-datos', component: ActualizarDatos },
   { path: '/CrearProducto', component: CrearProducto },
   {path: '/MisProductos', component: MisProductos},
+  {path: '/CarritoVista', component: CarritoVista},
+  { path: '/Pedidos', component: Pedidos },  // nueva ruta
+
+  {
+  path: '/mis-pedidos',
+  name: 'HistorialPedidos',
+  component: HistorialPedidos
+},
+
+
 
     {
     path: '/catalogo',

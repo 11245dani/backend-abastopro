@@ -43,6 +43,8 @@
 
 <script>
 import axios from 'axios'
+axios.defaults.baseURL = 'http://127.0.0.1:8000/api/login';
+
 
 export default {
   name: 'Login',
@@ -54,37 +56,43 @@ export default {
     }
   },
   methods: {
-    async iniciarSesion() {
-      try {
-        const response = await axios.post('http://localhost:8000/api/login', {
-          correo: this.correo,
-          password: this.password,
-        });
 
-        const { token, usuario, rol } = response.data;
+async iniciarSesion() {
+  try {
 
-        // Validar que el rol seleccionado coincida con el real
-        if (this.rol !== rol) {
-          alert(`Tu cuenta está registrada como ${this.formatoRol(rol)}. Por favor selecciona el rol correcto.`);
-          return;
-        }
 
-        // Guarda el token y usuario en localStorage
-        localStorage.setItem('token', token);
-        localStorage.setItem('usuario', JSON.stringify(usuario));
+    // 2. Hacer login
+    const response = await axios.post('http://127.0.0.1:8000/api/login', {
+      correo: this.correo,
+      password: this.password,
+    }, {
+  headers: {
+    Accept: 'application/json'
+  }
 
-        // Redirigir según el rol
-        if (rol === 'tendero') {
-          this.$router.push('/tendero');
-        } else if (rol === 'gestor_despacho') {
-          this.$router.push('/gestor');
-        } else if (rol === 'admin') {
-          this.$router.push('/admin');
-        }
-      } catch (error) {
-        alert(error.response?.data?.mensaje || 'Error al iniciar sesión');
-      }
-    },
+    });
+
+    const { token, usuario, rol } = response.data;
+
+    if (this.rol !== rol) {
+      alert(`Tu cuenta está registrada como ${this.formatoRol(rol)}. Por favor selecciona el rol correcto.`);
+      return;
+    }
+
+    localStorage.setItem('token', token);
+    localStorage.setItem('usuario', JSON.stringify(usuario));
+
+    if (rol === 'tendero') {
+      this.$router.push('/tendero');
+    } else if (rol === 'gestor_despacho') {
+      this.$router.push('/gestor');
+    } else if (rol === 'admin') {
+      this.$router.push('/admin');
+    }
+  } catch (error) {
+    alert(error.response?.data?.mensaje || 'Error al iniciar sesión');
+  }
+},
 
     formatoRol(rol) {
       if (rol === 'admin') return 'Administrador';

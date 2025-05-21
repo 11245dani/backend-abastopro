@@ -35,4 +35,5 @@ public function marca()
     return $this->belongsTo(Marca::class);
 }
 
+
 }

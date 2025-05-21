@@ -6,6 +6,8 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Notifications\Notifiable;
 use App\Notifications\RecuperarContrasena;
+use App\Models\Tendero;
+
 
 class Usuario extends Authenticatable
 {
@@ -48,6 +50,11 @@ public function getAuthIdentifierName()
 }
 
 
+
+public function tienda()
+{
+    return $this->hasOne(Tienda::class);
+}
 
 public function distribuidor()
 {

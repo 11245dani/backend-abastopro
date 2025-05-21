@@ -1,23 +1,32 @@
 <template>
 
-        <header class="header">
-      <div class="logo-text">
-        <img src="@/images/Logo.jpeg" alt="Logo AbastoPro" />
-        AbastoPro
+  <header class="header">
+    <div class="logo-text">
+      <img src="@/images/Logo.jpeg" alt="Logo AbastoPro" />
+      AbastoPro
+    </div>
+    <div class="user-menu" @click="toggleMenu">
+      <img src="@/images/user-icon.png" alt="Perfil" class="icon" />
+      <div v-if="showMenu" class="dropdown">
+        <ul>
+          <li @click="irAMiPerfil">Mi perfil</li>
+          <li @click="actualizarDatos">Actualizar datos</li>
+          <li @click="cerrarSesion">Cerrar sesión</li>
+        </ul>
       </div>
-      <div class="user-menu" @click="toggleMenu">
-        <img src="@/images/user-icon.png" alt="Perfil" class="icon" />
-        <div v-if="showMenu" class="dropdown">
-          <ul>
-            <li @click="irAMiPerfil">Mi perfil</li>
-            <li @click="actualizarDatos">Actualizar datos</li>
-            <li @click="cerrarSesion">Cerrar sesión</li>
-          </ul>
-        </div>
-      </div>
-  
-    </header>
+    </div>
+  </header>
+
   <div class="catalogo-container">
+
+    <!-- Notificación simple -->
+    <div
+      v-if="notificacion"
+      :class="['notificacion', tipoNotificacion]"
+    >
+      {{ notificacion }}
+    </div>
+
     <!-- Panel de Filtros -->
     <aside class="filtros">
       <h3>Filtros</h3>
@@ -46,7 +55,15 @@
         <button @click="limpiarFiltros">Limpiar</button>
       </div>
     </aside>
-    
+
+    <div>
+      <!-- Componente del carrito -->
+      <CarritoFlotante
+        :productos="carrito"
+        :visible="mostrarCarrito"
+        @cerrar="mostrarCarrito = false"
+      />
+    </div>
 
     <!-- Catálogo de Productos -->
     <div class="catalogo">
@@ -72,7 +89,7 @@
           <div class="botones">
             <button @click="verDetalle(prod)">Ver</button>
             <button @click="agregarAlCarrito(prod)">Añadir</button>
-          </div>
+        </div>
         </div>
       </div>
     </div>
@@ -97,10 +114,13 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import axios from 'axios'
+import { useRouter } from 'vue-router'
 
 const productos = ref([])
 const cargando = ref(true)
 const productoSeleccionado = ref(null)
+const carrito = ref(JSON.parse(localStorage.getItem('carrito')) || [])
+const mostrarCarrito = ref(false)
 
 const filtros = ref({
   busqueda: '',
@@ -112,7 +132,61 @@ const filtros = ref({
 
 const categorias = ref([])
 const marcas = ref([])
-const showMenu = ref(false);
+const showMenu = ref(false)
+
+const notificacion = ref(null)
+const tipoNotificacion = ref('') // 'exito' o 'error'
+
+const mostrarNotificacion = (mensaje, tipo = 'exito') => {
+  notificacion.value = mensaje
+  tipoNotificacion.value = tipo
+  setTimeout(() => {
+    notificacion.value = null
+    tipoNotificacion.value = ''
+  }, 3000)
+}
+
+const guardarCarrito = () => {
+  localStorage.setItem('carrito', JSON.stringify(carrito.value))
+}
+
+const agregarAlCarrito = async (producto) => {
+  const token = localStorage.getItem('token')
+  if (!token) {
+    alert('Debes iniciar sesión para agregar productos al carrito')
+    return
+  }
+
+  try {
+    await axios.post('/api/carrito/agregar', {
+      producto_id: producto.id,
+      cantidad: 1
+    }, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    })
+
+    const existente = carrito.value.find(p => p.id === producto.id)
+
+    if (existente) {
+      existente.cantidad += 1
+    } else {
+      carrito.value.push({
+        ...producto,
+        cantidad: 1,
+        precio: parseFloat(producto.precio)
+      })
+    }
+
+    guardarCarrito()
+    mostrarNotificacion('Producto agregado al carrito', 'exito')
+  } catch (error) {
+    console.error(error)
+    alert(error.response?.data?.message || 'Error al agregar al carrito')
+  }
+}
+
 
 const obtenerProductos = async () => {
   cargando.value = true
@@ -160,34 +234,57 @@ const cerrarModal = () => {
   productoSeleccionado.value = null
 }
 
-const agregarAlCarrito = (producto) => {
-  console.log('Añadir al carrito:', producto)
-}
 const toggleMenu = () => {
-  showMenu.value = !showMenu.value;
-};
+  showMenu.value = !showMenu.value
+}
+
+const router = useRouter()
 
 const irAMiPerfil = () => {
-  router.push('/perfil');
-};
+  router.push('/perfil')
+}
 
 const actualizarDatos = () => {
-  router.push('/actualizar-datos');
-};
+  router.push('/actualizar-datos')
+}
 
 const cerrarSesion = () => {
-  localStorage.removeItem('token');
-  localStorage.removeItem('usuario');
-  localStorage.removeItem('rol');
-  router.push('/login');
-};
+  localStorage.removeItem('token')
+  localStorage.removeItem('usuario')
+  localStorage.removeItem('rol')
+  router.push('/login')
+}
+
 onMounted(() => {
   obtenerFiltros()
   obtenerProductos()
 })
 </script>
 
+
 <style scoped>
+/* Estilos existentes */
+
+.notificacion {
+  position: fixed;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 600;
+  z-index: 9999;
+  color: white;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+}
+
+.notificacion.exito {
+  background-color: #4caf50;
+}
+
+.notificacion.error {
+  background-color: #f44336;
+}
 
 /* Header */
 .header {
@@ -452,5 +549,4 @@ input[type="range"] {
   accent-color: #000;
   margin-top: 10px;
 }
-
 </style>

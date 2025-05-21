@@ -1,22 +1,28 @@
 <template>
   <div class="dashboard">
     <!-- Header -->
-    <header class="header">
-      <div class="logo-text">
-        <img src="@/images/Logo.jpeg" alt="Logo AbastoPro" />
-        AbastoPro
+<header class="header">
+  <div class="logo-text">
+    <img src="@/images/Logo.jpeg" alt="Logo AbastoPro" />
+    AbastoPro
+  </div>
+  <div class="header-icons">
+    <div class="cart-icon" @click="irACarrito">
+      <img src="@/images/cart-icon.png" alt="Carrito" class="icon" />
+    </div>
+    <div class="user-menu" @click="toggleMenu">
+      <img src="@/images/user-icon.png" alt="Perfil" class="icon" />
+      <div v-if="showMenu" class="dropdown">
+        <ul>
+          <li @click="irAMiPerfil">Mi perfil</li>
+          <li @click="actualizarDatos">Actualizar datos</li>
+          <li @click="cerrarSesion">Cerrar sesión</li>
+        </ul>
       </div>
-      <div class="user-menu" @click="toggleMenu">
-        <img src="@/images/user-icon.png" alt="Perfil" class="icon" />
-        <div v-if="showMenu" class="dropdown">
-          <ul>
-            <li @click="irAMiPerfil">Mi perfil</li>
-            <li @click="actualizarDatos">Actualizar datos</li>
-            <li @click="cerrarSesion">Cerrar sesión</li>
-          </ul>
-        </div>
-      </div>
-    </header>
+    </div>
+  </div>
+</header>
+
 
     <!-- Contenedor principal: panel lateral + contenido -->
     <div class="main-container">
@@ -27,6 +33,8 @@
         </div>
         <ul class="menu">
           <li @click="irAProductos">Productos</li>
+          <li @click="irAMisPedidos">Mis pedidos</li>
+
         </ul>
       </aside>
 
@@ -56,6 +64,11 @@ const toggleMenu = () => {
   showMenu.value = !showMenu.value;
 };
 
+const irACarrito = () => {
+  router.push('/CarritoVista');
+};
+
+
 const irAMiPerfil = () => {
   router.push('/perfil');
 };
@@ -78,6 +91,11 @@ const irAProductos = () => {
 const verCatalogo = () => {
   router.push('/catalogo'); // Ajusta según tu ruta real
 };
+
+const irAMisPedidos = () => {
+  router.push('/mis-pedidos'); // Ajusta esta ruta según como tengas configurado el router
+};
+
 </script>
 
 <style scoped>
@@ -138,6 +156,12 @@ const verCatalogo = () => {
   margin-right: 10px;
 }
 
+.header-icons {
+  display: flex;
+  align-items: center;
+  gap: 15px; /* Espacio entre los íconos */
+}
+
 .user-menu {
   position: relative;
   cursor: pointer;
@@ -147,6 +171,16 @@ const verCatalogo = () => {
   width: 30px;
   height: 30px;
   border-radius: 50%;
+}
+
+.cart-icon .icon {
+  width: 28px;
+  height: 28px;
+  cursor: pointer;
+}
+
+.cart-icon .icon:hover {
+  filter: brightness(0.8);
 }
 
 .dropdown {
