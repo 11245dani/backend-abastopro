@@ -16,9 +16,10 @@
         </div>
 
         <div class="form-group">
-          <label for="password">
-            Contraseña <a href="#" class="forgot">¿Olvidaste tu contraseña?</a>
-          </label>
+    <label for="password">
+      Contraseña <router-link to="/recuperar-contrasena" class="forgot">¿Olvidaste tu contraseña?</router-link>
+      </label>
+
           <input type="password" id="password" v-model="password" placeholder="introduce acá tu contraseña" required />
         </div>
 
@@ -43,7 +44,9 @@
 
 <script>
 import axios from 'axios'
+import { RouterLink } from 'vue-router'
 axios.defaults.baseURL = 'http://127.0.0.1:8000/api/login';
+
 
 
 export default {

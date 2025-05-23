@@ -14,6 +14,8 @@ import CatalogoProductos from './components/CatalogoProductos.vue';
 import CarritoVista from './components/CarritoVista.vue';
 import Pedidos from './components/Pedidos.vue';  // importa el nuevo componente
 import HistorialPedidos from './components/HistorialPedidos.vue';
+import ForgotPassword from './components/ForgotPassword.vue';
+
 
 
 
@@ -27,6 +29,7 @@ const routes = [
   {path: '/MisProductos', component: MisProductos},
   {path: '/CarritoVista', component: CarritoVista},
   { path: '/Pedidos', component: Pedidos },  // nueva ruta
+  { path: '/recuperar-contrasena', name: 'ForgotPassword', component: ForgotPassword },
 
   {
   path: '/mis-pedidos',
