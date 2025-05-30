@@ -24,66 +24,98 @@ class ProductoController extends Controller
         );
     }
 
-    public function store(Request $request)
-    {
-        $request->validate([
-            'nombre' => 'required|string',
-            'descripcion' => 'nullable|string',
-            'imagen_url' => 'nullable|string',
-            'precio' => 'required|numeric|min:0',
-            'stock' => 'required|integer|min:0',
-            'categoria_id' => 'required|exists:categorias,id',
-            'marca_id' => 'required|exists:marcas,id',
-        ]);
+public function store(Request $request)
+{
+    $request->validate([
+        'nombre' => 'required|string',
+        'descripcion' => 'nullable|string',
+        'imagen' => 'nullable|image|mimes:jpeg,png,jpg|max:2048', // hasta 2MB
+        'precio' => 'required|numeric|min:0',
+        'stock' => 'required|integer|min:0',
+        'categoria_id' => 'required|exists:categorias,id',
+        'marca_id' => 'required|exists:marcas,id',
+    ]);
 
-        $distribuidor = auth()->user()->distribuidor;
+    $distribuidor = auth()->user()->distribuidor;
 
-        if (!$distribuidor) {
+    if (!$distribuidor) {
         return response()->json(['error' => 'Distribuidor no encontrado'], 404);
-     }
+    }
 
-        if (!$distribuidor || $distribuidor->estado_autorizacion !== 'aprobado') {
-            return response()->json(['error' => 'No autorizado para registrar productos'], 403);
-        }
+    if ($distribuidor->estado_autorizacion !== 'aprobado') {
+        return response()->json(['error' => 'No autorizado para registrar productos'], 403);
+    }
 
-        $producto = Producto::create([
+    $imagenUrl = null;
+    if ($request->hasFile('imagen')) {
+        $path = $request->file('imagen')->store('productos', 'public');
+        $imagenUrl = '/storage/' . $path;
+    }
+
+    $producto = Producto::create([
         'distribuidor_id' => $distribuidor->id,
         'nombre' => $request->nombre,
         'descripcion' => $request->descripcion,
-        'imagen_url' => $request->imagen_url,
+        'imagen_url' => $imagenUrl, // aquí corregido el nombre de la variable
         'precio' => $request->precio,
         'stock' => $request->stock,
         'categoria_id' => $request->categoria_id,
         'marca_id' => $request->marca_id,
-     ]);
+    ]);
 
-        return response()->json($producto, 201);
+    return response()->json($producto, 201);
+}
+
+
+public function update(Request $request, $id)
+{
+    $producto = Producto::findOrFail($id);
+    $distribuidor = auth()->user()->distribuidor;
+
+    if (!$distribuidor || $producto->distribuidor_id !== $distribuidor->id) {
+        return response()->json(['error' => 'No autorizado'], 403);
     }
 
-    public function update(Request $request, Producto $producto)
-    {
-        $distribuidor = Auth::user()->distribuidor;
+    $request->validate([
+        'nombre' => 'required|string',
+        'descripcion' => 'nullable|string',
+        'precio' => 'required|numeric|min:0',
+        'stock' => 'required|integer|min:0',
+        'categoria_id' => 'required|exists:categorias,id',
+        'marca_id' => 'required|exists:marcas,id',
+        'imagen' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+    ]);
 
-        if ($producto->distribuidor_id !== $distribuidor->id) {
-            return response()->json(['error' => 'No autorizado para editar este producto'], 403);
+    // Eliminar imagen si el usuario lo indica
+    if ($request->has('eliminar_imagen') && $producto->imagen_url) {
+        $rutaImagen = str_replace('/storage/', '', $producto->imagen_url);
+        \Storage::disk('public')->delete($rutaImagen);
+        $producto->imagen_url = null;
+    }
+
+    // Subir nueva imagen
+    if ($request->hasFile('imagen')) {
+        if ($producto->imagen_url) {
+            $rutaAnterior = str_replace('/storage/', '', $producto->imagen_url);
+            \Storage::disk('public')->delete($rutaAnterior);
         }
 
-        $request->validate([
-            'nombre' => 'sometimes|required|string',
-            'descripcion' => 'nullable|string',
-            'imagen_url' => 'nullable|string',
-            'precio' => 'sometimes|required|numeric|min:0',
-            'stock' => 'sometimes|required|integer|min:0',
-            'categoria_id' => 'sometimes|required|exists:categorias,id',
-            'marca_id' => 'sometimes|required|exists:marcas,id',
-        ]);
-
-        $producto->update($request->only([
-            'nombre', 'descripcion', 'imagen_url', 'precio', 'stock', 'categoria_id', 'marca_id'
-        ]));
-
-        return response()->json($producto);
+        $path = $request->file('imagen')->store('productos', 'public');
+        $producto->imagen_url = '/storage/' . $path;
     }
+
+    $producto->update([
+        'nombre' => $request->nombre,
+        'descripcion' => $request->descripcion,
+        'precio' => $request->precio,
+        'stock' => $request->stock,
+        'categoria_id' => $request->categoria_id,
+        'marca_id' => $request->marca_id,
+    ]);
+
+    return response()->json($producto);
+}
+
 
 public function destroy(Producto $producto)
 {

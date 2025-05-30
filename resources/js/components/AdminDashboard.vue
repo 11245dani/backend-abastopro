@@ -26,8 +26,7 @@
         <ul class="menu">
           <li @click="irADashboard">Dashboard</li>
           <li @click="router.push('/admin/usuarios')">Todos los usuarios</li>
-          <li>Tiendas</li>
-          <li>Distribuidores</li>
+          <li @click="mostrarFormulario = 'gestion'">Gestionar Categorías y Marcas</li>
         </ul>
       </div>
 
@@ -35,7 +34,7 @@
       <main class="contenido">
         <h1>Bienvenido, {{ nombreUsuario }}</h1>
 
-        <!-- Mostrar lista de usuarios si fue solicitada -->
+        <!-- Lista de usuarios -->
         <div v-if="usuariosCargados">
           <h2>Lista de Usuarios</h2>
           <div v-if="usuarios.length">
@@ -49,63 +48,136 @@
             <p>No hay usuarios disponibles.</p>
           </div>
         </div>
+
+        <!-- Gestión de categorías y marcas -->
+        <div v-if="mostrarFormulario === 'gestion'" class="form-gestion">
+          <h2>Gestionar Categorías y Marcas</h2>
+
+          <!-- Categorías -->
+          <div class="gestion-seccion">
+            <h3>Categorías</h3>
+            <div class="form-group">
+              <label>Nueva Categoría</label>
+              <input v-model="nuevaCategoria" placeholder="Ej: Lácteos" />
+              <button @click="crearCategoria" class="btn-secondary">Crear</button>
+            </div>
+            <ul>
+              <li v-for="cat in categorias" :key="cat.id">{{ cat.nombre }}</li>
+            </ul>
+          </div>
+
+          <!-- Marcas -->
+          <div class="gestion-seccion" style="margin-top: 2rem;">
+            <h3>Marcas</h3>
+            <div class="form-group">
+              <label>Nueva Marca</label>
+              <input v-model="nuevaMarca" placeholder="Ej: Alpina" />
+              <button @click="crearMarca" class="btn-secondary">Crear</button>
+            </div>
+            <ul>
+              <li v-for="marca in marcas" :key="marca.id">{{ marca.nombre }}</li>
+            </ul>
+          </div>
+        </div>
       </main>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue';
-import { useRouter } from 'vue-router';
-import axios from 'axios';
+import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import axios from 'axios'
 
-const showMenu = ref(false);
-const router = useRouter();
+const router = useRouter()
+const mostrarFormulario = ref(null)
+const showMenu = ref(false)
 
-const usuarios = ref([]);
-const usuariosCargados = ref(false); // ✅ Nueva bandera para mostrar contenido solo tras intento de carga
+const nuevaCategoria = ref('')
+const nuevaMarca = ref('')
+const categorias = ref([])
+const marcas = ref([])
 
-// Recuperar datos del usuario
-const usuarioData = JSON.parse(localStorage.getItem('usuario')) || {};
-const nombreUsuario = usuarioData.nombre || 'Usuario';
+const usuarios = ref([])
+const usuariosCargados = ref(false)
 
-// Funciones
+const usuarioData = JSON.parse(localStorage.getItem('usuario')) || {}
+const nombreUsuario = usuarioData.nombre || 'Usuario'
+
+// Funciones de menú
 const toggleMenu = () => {
-  showMenu.value = !showMenu.value;
-};
+  showMenu.value = !showMenu.value
+}
 
 const irAMiPerfil = () => {
-  router.push('/perfil');
-};
+  router.push('/perfil')
+}
 
 const cerrarSesion = () => {
-  localStorage.removeItem('token');
-  localStorage.removeItem('usuario');
-  localStorage.removeItem('rol');
-  router.push('/login');
-};
+  localStorage.removeItem('token')
+  localStorage.removeItem('usuario')
+  localStorage.removeItem('rol')
+  router.push('/login')
+}
 
 const irADashboard = () => {
-  router.push('/dashboard');
-};
+  router.push('/dashboard')
+}
 
+// Gestión de categorías
+const obtenerCategorias = async () => {
+  const res = await axios.get('/api/categorias')
+  categorias.value = res.data
+}
+
+const crearCategoria = async () => {
+  if (!nuevaCategoria.value.trim()) return
+  await axios.post('/api/categorias', { nombre: nuevaCategoria.value }, {
+    headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+  })
+  nuevaCategoria.value = ''
+  obtenerCategorias()
+}
+
+// Gestión de marcas
+const obtenerMarcas = async () => {
+  const res = await axios.get('/api/marcas')
+  marcas.value = res.data
+}
+
+const crearMarca = async () => {
+  if (!nuevaMarca.value.trim()) return
+  await axios.post('/api/marcas', { nombre: nuevaMarca.value }, {
+    headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+  })
+  nuevaMarca.value = ''
+  obtenerMarcas()
+}
+
+// Gestión de usuarios
 const listarUsuarios = async () => {
   try {
     const response = await axios.get('http://localhost:8000/api/usuarios', {
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('token')}`,
       },
-    });
-    usuarios.value = response.data.usuarios;
+    })
+    usuarios.value = response.data.usuarios
   } catch (error) {
-    console.error(error);
-    alert('Error al obtener usuarios: ' + (error.response?.data?.mensaje || 'Error desconocido'));
-    usuarios.value = []; // Para que muestre "no hay usuarios"
+    console.error(error)
+    alert('Error al obtener usuarios: ' + (error.response?.data?.mensaje || 'Error desconocido'))
+    usuarios.value = []
   } finally {
-    usuariosCargados.value = true; // ✅ Siempre se activa después de intentar cargar
+    usuariosCargados.value = true
   }
-};
+}
+
+onMounted(() => {
+  obtenerCategorias()
+  obtenerMarcas()
+})
 </script>
+
 
 <style scoped>
 .dashboard {

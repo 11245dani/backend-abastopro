@@ -2,23 +2,24 @@
   <div class="crear-producto">
     <h2>Registrar nuevo producto</h2>
 
-    <!-- Sección para crear nueva categoría -->
-    <div class="form-section">
-      <label for="nuevaCategoria">Nueva categoría</label>
-      <div class="input-group">
-        <input v-model="nuevaCategoria" placeholder="Ej: Bebidas" />
-        <button @click="crearCategoria" class="btn-secondary">Crear</button>
-      </div>
-    </div>
+<!-- Sección para crear nueva categoría (solo si es admin) -->
+<div v-if="rol === 'admin'" class="form-section">
+  <label for="nuevaCategoria">Nueva categoría</label>
+  <div class="input-group">
+    <input v-model="nuevaCategoria" placeholder="Ej: Bebidas" />
+    <button @click="crearCategoria" class="btn-secondary">Crear</button>
+  </div>
+</div>
 
-    <!-- Sección para crear nueva marca -->
-    <div class="form-section">
-      <label for="nuevaMarca">Nueva marca</label>
-      <div class="input-group">
-        <input v-model="nuevaMarca" placeholder="Ej: Coca-Cola" />
-        <button @click="crearMarca" class="btn-secondary">Crear</button>
-      </div>
-    </div>
+<!-- Sección para crear nueva marca (solo si es admin) -->
+<div v-if="rol === 'admin'" class="form-section">
+  <label for="nuevaMarca">Nueva marca</label>
+  <div class="input-group">
+    <input v-model="nuevaMarca" placeholder="Ej: Coca-Cola" />
+    <button @click="crearMarca" class="btn-secondary">Crear</button>
+  </div>
+</div>
+
 
     <!-- Formulario principal -->
     <form @submit.prevent="crearProducto" class="form-main">
@@ -35,7 +36,13 @@
       <div class="form-row">
         <div class="form-group">
           <label>Precio</label>
-          <input type="number" v-model.number="producto.precio" min="0" required />
+          <input
+           type="text"
+           v-model="precioFormateado"
+            @input="formatearPrecio"
+           placeholder="Ej: 2.000"
+            required
+          />
         </div>
         <div class="form-group">
           <label>Stock</label>
@@ -60,19 +67,24 @@
         </div>
       </div>
 
-      <div class="form-group">
-        <label>Imagen URL (opcional)</label>
-        <input v-model="producto.imagen_url" />
-      </div>
-
+<div class="form-group">
+  <label>Imagen del producto</label>
+  <input type="file" @change="handleImagenSeleccionada" accept="image/*" />
+  <div v-if="previewUrl" class="preview">
+    <img :src="previewUrl" alt="Vista previa" style="max-width: 200px; max-height: 200px;" />
+  </div>
+</div>
       <button type="submit" class="btn-primary">Guardar producto</button>
     </form>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import axios from 'axios'
+
+const rol = localStorage.getItem('rol') || ''
+
 
 const categorias = ref([])
 const marcas = ref([])
@@ -81,7 +93,7 @@ const nuevaMarca = ref('')
 const producto = ref({
   nombre: '',
   descripcion: '',
-  precio: null,
+  precio: 0,
   stock: null,
   categoria_id: '',
   marca_id: '',
@@ -119,12 +131,80 @@ const crearMarca = async () => {
   obtenerMarcas()
 }
 
+const precioFormateado = ref('')
+
+const formatearPrecio = () => {
+  // Remover cualquier caracter que no sea dígito
+  let soloNumeros = precioFormateado.value.replace(/\D/g, '')
+
+  // Convertir a número para eliminar ceros a la izquierda
+  let numero = parseInt(soloNumeros, 10)
+  if (isNaN(numero)) {
+    producto.value.precio = 0
+    precioFormateado.value = ''
+    return
+  }
+
+  producto.value.precio = numero
+
+  // Formatear con separador de miles (puntos)
+  precioFormateado.value = numero.toLocaleString('es-CO')
+}
+
+// Si quieres inicializar con producto.precio:
+watch(() => producto.value.precio, (newVal) => {
+  if (newVal !== null && newVal !== undefined) {
+    precioFormateado.value = newVal.toLocaleString('es-CO')
+  }
+})
+
+const imagenSeleccionada = ref(null)
+const previewUrl = ref(null)
+
+const handleImagenSeleccionada = (e) => {
+  const file = e.target.files[0]
+  if (file && file.type.startsWith('image/')) {
+    imagenSeleccionada.value = file
+
+    // Redimensionar usando canvas
+    const reader = new FileReader()
+    reader.onload = (event) => {
+      const img = new Image()
+      img.onload = () => {
+        const canvas = document.createElement('canvas')
+        const maxWidth = 800
+        const scale = maxWidth / img.width
+        canvas.width = maxWidth
+        canvas.height = img.height * scale
+        const ctx = canvas.getContext('2d')
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+        previewUrl.value = canvas.toDataURL('image/jpeg') // se puede usar también 'image/png'
+      }
+      img.src = event.target.result
+    }
+    reader.readAsDataURL(file)
+  }
+}
+
+
 // Enviar formulario
 const crearProducto = async () => {
+  const formData = new FormData()
+  formData.append('nombre', producto.value.nombre)
+  formData.append('descripcion', producto.value.descripcion)
+  formData.append('precio', producto.value.precio)
+  formData.append('stock', producto.value.stock)
+  formData.append('categoria_id', producto.value.categoria_id)
+  formData.append('marca_id', producto.value.marca_id)
+  if (imagenSeleccionada.value) {
+    formData.append('imagen', imagenSeleccionada.value)
+  }
+
   try {
-    await axios.post('/api/productos', producto.value, {
+    await axios.post('/api/productos', formData, {
       headers: {
-        Authorization: `Bearer ${localStorage.getItem('token')}`
+        Authorization: `Bearer ${localStorage.getItem('token')}`,
+        'Content-Type': 'multipart/form-data'
       }
     })
     alert('Producto creado con éxito')
@@ -133,6 +213,7 @@ const crearProducto = async () => {
     console.error(error)
   }
 }
+
 </script>
 
 <style scoped>

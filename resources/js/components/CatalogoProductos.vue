@@ -1,5 +1,4 @@
 <template>
-
   <header class="header">
     <div class="logo-text">
       <img src="@/images/Logo.jpeg" alt="Logo AbastoPro" />
@@ -18,7 +17,6 @@
   </header>
 
   <div class="catalogo-container">
-
     <!-- Notificación simple -->
     <div
       v-if="notificacion"
@@ -78,7 +76,7 @@
           <h3>{{ prod.nombre }}</h3>
           <p class="categoria">{{ prod.categoria }}</p>
           <div class="precio-stock">
-            <p class="precio">$ {{ Number(prod.precio).toFixed(2) }}</p>
+            <p class="precio">{{ formatearPrecio(prod.precio) }}</p>
             <p class="stock">Stock: {{ prod.stock }}</p>
           </div>
           <div class="marca-distribuidor">
@@ -89,7 +87,7 @@
           <div class="botones">
             <button @click="verDetalle(prod)">Ver</button>
             <button @click="agregarAlCarrito(prod)">Añadir</button>
-        </div>
+          </div>
         </div>
       </div>
     </div>
@@ -101,7 +99,7 @@
         <h3>{{ productoSeleccionado.nombre }}</h3>
         <img v-if="productoSeleccionado.imagen_url" :src="productoSeleccionado.imagen_url" class="modal-imagen" />
         <p><strong>Categoría:</strong> {{ productoSeleccionado.categoria }}</p>
-        <p><strong>Precio:</strong> $ {{ Number(productoSeleccionado.precio).toFixed(2) }}</p>
+        <p><strong>Precio:</strong> {{ formatearPrecio(productoSeleccionado.precio) }}</p>
         <p><strong>Stock:</strong> {{ productoSeleccionado.stock }}</p>
         <p><strong>Marca:</strong> {{ productoSeleccionado.marca }}</p>
         <p><strong>Distribuidor:</strong> {{ productoSeleccionado.distribuidor }}</p>
@@ -146,6 +144,16 @@ const mostrarNotificacion = (mensaje, tipo = 'exito') => {
   }, 3000)
 }
 
+const formatearPrecio = (precio) => {
+  return new Intl.NumberFormat('es-CO', {
+    style: 'currency',
+    currency: 'COP',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
+  }).format(precio)
+}
+
+
 const guardarCarrito = () => {
   localStorage.setItem('carrito', JSON.stringify(carrito.value))
 }
@@ -175,7 +183,8 @@ const agregarAlCarrito = async (producto) => {
       carrito.value.push({
         ...producto,
         cantidad: 1,
-        precio: parseFloat(producto.precio)
+        precio: parseFloat(producto.precio),
+        imagen: producto.imagen_url // <--- esta línea es clave
       })
     }
 
@@ -260,6 +269,7 @@ onMounted(() => {
   obtenerProductos()
 })
 </script>
+
 
 
 <style scoped>
