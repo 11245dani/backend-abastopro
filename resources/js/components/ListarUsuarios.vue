@@ -23,6 +23,15 @@
         <option value="pendiente">Pendiente</option>
         <option value="rechazado">Rechazado</option>
       </select>
+
+      <!-- ✅ Nuevo filtro de autorización -->
+      <select v-model="filtroAutorizacion">
+        <option value="">Todas las autorizaciones</option>
+        <option value="aprobado">Aprobado</option>
+        <option value="pendiente">Pendiente</option>
+        <option value="rechazado">Rechazado</option>
+        <option value="No aplica">No aplica</option>
+      </select>
     </div>
 
     <!-- Tabla de usuarios -->
@@ -32,6 +41,7 @@
           <th>Usuario</th>
           <th>Tipo</th>
           <th>Estado</th>
+          <th>Autorización distribución</th> 
           <th>Fecha de Registro</th>
           <th>Contacto</th>
           <th>Acciones</th>
@@ -42,10 +52,25 @@
           <td>{{ usuario.nombre }}</td>
           <td>{{ mostrarRol(usuario.rol) }}</td>
           <td>{{ usuario.estado }}</td>
+
+          <!-- ✅ Visualización del estado de autorización -->
+          <td>
+            <span
+              :class="{
+                'badge badge-aprobado': usuario.distribuidor?.estado_autorizacion === 'aprobado',
+                'badge badge-pendiente': usuario.distribuidor?.estado_autorizacion === 'pendiente',
+                'badge badge-rechazado': usuario.distribuidor?.estado_autorizacion === 'rechazado',
+                'badge badge-desconocido': !usuario.distribuidor?.estado_autorizacion
+              }"
+            >
+              {{ usuario.distribuidor?.estado_autorizacion || 'No aplica' }}
+            </span>
+          </td>
+
           <td>{{ formatearFecha(usuario.created_at) }}</td>
           <td>{{ usuario.correo }}<br />{{ usuario.telefono || 'No disponible' }}</td>
           <td>
-            <div v-if="usuario.rol === 'gestor_despacho' && usuario.estado_autorizacion !== 'aprobado'">
+            <div v-if="usuario.rol === 'gestor_despacho' && usuario.distribuidor?.estado_autorizacion !== 'aprobado'">
               <button @click="aprobarGestor(usuario)">Aprobar</button>
             </div>
             <div v-else>
@@ -54,13 +79,12 @@
           </td>
         </tr>
         <tr v-if="usuariosFiltrados.length === 0">
-          <td colspan="6">No hay usuarios que coincidan con los criterios.</td>
+          <td colspan="7">No hay usuarios que coincidan con los criterios.</td>
         </tr>
       </tbody>
     </table>
   </div>
 </template>
-
 
 <script setup>
 import { ref, computed, onMounted } from 'vue';
@@ -72,6 +96,7 @@ const usuarios = ref([]);
 const busqueda = ref('');
 const filtroRol = ref('');
 const filtroEstado = ref('');
+const filtroAutorizacion = ref('');
 
 onMounted(async () => {
   try {
@@ -96,7 +121,12 @@ const usuariosFiltrados = computed(() => {
     const coincideRol = filtroRol.value ? usuario.rol === filtroRol.value : true;
     const coincideEstado = filtroEstado.value ? usuario.estado === filtroEstado.value : true;
 
-    return coincideBusqueda && coincideRol && coincideEstado;
+    const estadoAutorizacion = usuario.distribuidor?.estado_autorizacion || 'No aplica';
+    const coincideAutorizacion = filtroAutorizacion.value
+      ? estadoAutorizacion === filtroAutorizacion.value
+      : true;
+
+    return coincideBusqueda && coincideRol && coincideEstado && coincideAutorizacion;
   });
 });
 
@@ -118,12 +148,10 @@ const verUsuario = (usuario) => {
 
 const aprobarGestor = async (usuario) => {
   const token = localStorage.getItem('token');
-
   if (!confirm(`¿Estás seguro de aprobar a ${usuario.nombre}?`)) return;
 
-
   try {
-    const response = await axios.put(
+    await axios.put(
       `/api/admin/aprobar-gestor-despacho/${usuario.id}`,
       {},
       {
@@ -134,8 +162,9 @@ const aprobarGestor = async (usuario) => {
       }
     );
 
-    // Actualizar el estado en la tabla
-    usuario.estado_autorizacion = 'aprobado';
+    if (usuario.distribuidor) {
+      usuario.distribuidor.estado_autorizacion = 'aprobado';
+    }
 
     alert('Gestor de despacho aprobado exitosamente');
   } catch (error) {
@@ -143,7 +172,6 @@ const aprobarGestor = async (usuario) => {
     alert('Error al aprobar al gestor de despacho');
   }
 };
-
 </script>
 
 <style scoped>
@@ -191,5 +219,30 @@ button {
 
 button:hover {
   background-color: #1565c0;
+}
+
+/* ✅ Estilos para badges */
+.badge {
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  color: white;
+  text-transform: capitalize;
+}
+
+.badge-aprobado {
+  background-color: #4caf50;
+}
+
+.badge-pendiente {
+  background-color: #ff9800;
+}
+
+.badge-rechazado {
+  background-color: #f44336;
+}
+
+.badge-desconocido {
+  background-color: #9e9e9e;
 }
 </style>

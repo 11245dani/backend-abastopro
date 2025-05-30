@@ -194,16 +194,16 @@ input {
 }
 
 .account-type button.active {
-  background-color: #000;
-  color: white;
+  background-color: #99D7A9;
+  color: black;
   font-weight: bold;
 }
 
 .submit-btn {
   width: 100%;
   padding: 12px;
-  background-color: #000;
-  color: white;
+  background-color: #99D7A9;
+  color:  black;
   border: none;
   border-radius: 8px;
   font-size: 15px;

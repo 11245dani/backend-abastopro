@@ -177,8 +177,8 @@ input {
 }
 
 .submit-btn {
-  background-color: #000;
-  color: white;
+  background-color: #99D7A9;
+  color: Black;
   border: none;
   border-radius: 5px;
   padding: 10px;

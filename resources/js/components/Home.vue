@@ -82,8 +82,8 @@ function goRegister() {
     .btn {
       padding: 10px 18px;
       border: none;
-      background-color: #000;
-      color: white;
+      background-color: #99D7A9;
+      color: rgb(0, 0, 0);
       border-radius: 5px;
       cursor: pointer;
       font-size: 15px;

@@ -27,6 +27,7 @@ Route::get('/restablecer-contrasena/{token}', [ResetPasswordController::class, '
 Route::post('/restablecer-contrasena', [ResetPasswordController::class, 'cambiarContrasena'])->name('password.update');
 
 
+
 Route::get('/reset-password/{token}', [ResetPasswordController::class, 'showResetForm'])
     ->middleware('guest')
     ->name('password.reset');
