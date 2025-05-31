@@ -38,6 +38,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::middleware('auth:sanctum')->put('/usuario/actualizar', [AuthController::class, 'actualizarUsuario']);
     Route::put('/admin/aprobar-gestor-despacho/{id}', [AdminController::class, 'aprobarGestorDespacho']);
+    Route::put('/admin/rechazar-gestor-despacho/{id}', [AdminController::class, 'rechazarGestorDespacho']);
      Route::get('/carrito', [CarritoController::class, 'ver']);
     Route::post('/carrito/agregar', [CarritoController::class, 'agregar']);
     Route::delete('/carrito/eliminar/{item}', [CarritoController::class, 'eliminar']);

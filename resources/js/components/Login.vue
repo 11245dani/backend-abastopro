@@ -133,7 +133,7 @@ body, .login-page {
 }
 
 .logo img {
-  width: 120px;
+  width: 135px;
   height: auto;
 }
 
@@ -196,7 +196,6 @@ input {
 .account-type button.active {
   background-color: #99D7A9;
   color: black;
-  font-weight: bold;
 }
 
 .submit-btn {

@@ -2,8 +2,7 @@
   <div class="dashboard">
     <header class="header">
       <div class="logo-text">
-        <img src="@/images/Logo.jpeg" alt="Logo AbastoPro" />
-        AbastoPro
+        <img src="@/images/logoname.png" alt="Logo AbastoPro" />
       </div>
       <div class="user-menu" @click="toggleMenu">
         <img src="@/images/user-icon.png" alt="Perfil" class="icon" />
@@ -19,10 +18,7 @@
     <div class="admin-dashboard">
       <!-- Panel Lateral -->
       <div class="admin-panel">
-        <div class="logo-text">
-          <img src="@/images/Logo.jpeg" alt="Logo AbastoPro" />
-          AbastoPro
-        </div>
+        
         <ul class="menu">
           <li @click="irADashboard">Dashboard</li>
           <li @click="router.push('/admin/usuarios')">Todos los usuarios</li>
@@ -35,6 +31,7 @@
         <h1>Bienvenido, {{ nombreUsuario }}</h1>
 
         <!-- Lista de usuarios -->
+        <!-- Mostrar lista de usuarios si fue solicitada -->
         <div v-if="usuariosCargados">
           <h2>Lista de Usuarios</h2>
           <div v-if="usuarios.length">
@@ -235,6 +232,7 @@ onMounted(() => {
   list-style: none;
   margin: 0;
   padding: 0;
+  font-family: Arial, Helvetica, sans-serif;
 }
 
 .dropdown li {
@@ -244,7 +242,7 @@ onMounted(() => {
 }
 
 .dropdown li:hover {
-  background-color: #f0f0f0;
+  background-color: #99D7A9;
 }
 
 .admin-dashboard {
@@ -266,6 +264,7 @@ onMounted(() => {
   list-style: none;
   padding: 0;
   margin-top: 20px;
+  font-family: Arial, Helvetica, sans-serif;
 }
 
 .menu li {
@@ -284,5 +283,6 @@ onMounted(() => {
   height: calc(100vh - 70px);
   overflow-y: auto;
   box-sizing: border-box;
+  font-family: Arial, Helvetica, sans-serif;
 }
 </style>

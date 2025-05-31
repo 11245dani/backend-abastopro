@@ -24,7 +24,7 @@
 
             <!-- Botones condicionales según el estado -->
             <div class="acciones-pedido">
-              <button v-if="pedido.pedido.estado === 'pendiente'" @click="cambiarEstado(pedido.pedido.id, 'aprobado')">
+              <button v-if="pedido.pedido.estado === 'pendiente'" @click="cambiarEstado(pedido.pedido.id, 'procesado')">
                 Aprobar
               </button>
               <button v-if="pedido.pedido.estado === 'aceptado'" @click="cambiarEstado(pedido.pedido.id, 'en_camino')">

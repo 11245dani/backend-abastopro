@@ -70,9 +70,11 @@
           <td>{{ formatearFecha(usuario.created_at) }}</td>
           <td>{{ usuario.correo }}<br />{{ usuario.telefono || 'No disponible' }}</td>
           <td>
+           
             <div v-if="usuario.rol === 'gestor_despacho' && usuario.distribuidor?.estado_autorizacion !== 'aprobado'">
-              <button @click="aprobarGestor(usuario)">Aprobar</button>
-            </div>
+            <button @click="aprobarGestor(usuario)">Aprobar</button>
+            <button @click="rechazarGestor(usuario)" class="rechazar">Rechazar</button>
+          </div>
             <div v-else>
               <button @click="verUsuario(usuario)">Ver</button>
             </div>
@@ -172,6 +174,35 @@ const aprobarGestor = async (usuario) => {
     alert('Error al aprobar al gestor de despacho');
   }
 };
+
+const rechazarGestor = async (usuario) => {
+  const token = localStorage.getItem('token');
+
+  if (!confirm(`¿Estás seguro de rechazar a ${usuario.nombre}?`)) return;
+
+  try {
+    const response = await axios.put(
+      `/api/admin/rechazar-gestor-despacho/${usuario.id}`,
+      {},
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: 'application/json',
+        },
+      }
+    );
+
+    if (usuario.distribuidor) {
+      usuario.distribuidor.estado_autorizacion = 'rechazado';
+    }
+
+    alert('Gestor de despacho rechazado exitosamente');
+  } catch (error) {
+    console.error(error);
+    alert('Error al rechazar al gestor de despacho');
+  }
+};
+
 </script>
 
 <style scoped>
@@ -215,6 +246,15 @@ button {
   border: none;
   border-radius: 5px;
   cursor: pointer;
+}
+
+button.rechazar {
+  background-color: #d32f2f;
+  margin-left: 8px;
+}
+
+button.rechazar:hover {
+  background-color: #c62828;
 }
 
 button:hover {
