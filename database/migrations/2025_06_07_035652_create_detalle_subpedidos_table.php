@@ -13,10 +13,12 @@ return new class extends Migration
      */
     public function up()
     {
-Schema::create('pedidos', function (Blueprint $table) {
+Schema::create('detalle_subpedidos', function (Blueprint $table) {
     $table->id();
-    $table->foreignId('tienda_id')->constrained()->onDelete('cascade');
-    $table->enum('estado', ['pendiente', 'procesado', 'cancelado', 'completado'])->default('pendiente');
+    $table->foreignId('subpedido_id')->constrained()->onDelete('cascade');
+    $table->foreignId('producto_id')->constrained()->onDelete('restrict');
+    $table->integer('cantidad');
+    $table->decimal('precio_unitario', 10, 2);
     $table->timestamps();
 });
 
@@ -29,6 +31,6 @@ Schema::create('pedidos', function (Blueprint $table) {
      */
     public function down()
     {
-        Schema::dropIfExists('pedidos');
+        Schema::dropIfExists('detalle_subpedidos');
     }
 };

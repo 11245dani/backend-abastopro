@@ -12,6 +12,8 @@ use App\Http\Controllers\API\ForgotPasswordController;
 use App\Http\Controllers\ResetPasswordController;
 use App\Http\Controllers\CarritoController;
 use App\Http\Controllers\PedidoControllerr;
+use App\Http\Controllers\SubpedidoController;
+
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
@@ -31,6 +33,7 @@ Route::middleware('auth:sanctum')->get('/historial-pedidos', [PedidoControllerr:
 
 // routes/api.php
 Route::middleware('auth:sanctum')->patch('/pedidos/{id}/estado', [PedidoControllerr::class, 'cambiarEstado']);
+Route::put('/pedidos/{id}/confirmar', [PedidoController::class, 'confirmar']);
 
 
 Route::middleware('auth:sanctum')->group(function () {
@@ -75,4 +78,6 @@ Route::middleware(['auth:sanctum', 'gestor'])->group(function () {
 
 Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLinkEmail']);
 
-
+Route::middleware('auth:sanctum')->get('/pedidos/tienda', [PedidoControllerr::class, 'pedidosTienda']);
+Route::middleware('auth:sanctum')->get('/pedidos/distribuidor', [SubpedidoController::class, 'pedidosDistribuidor']);
+Route::patch('/subpedidos/{id}/estado', [SubpedidoController::class, 'actualizarEstado']);

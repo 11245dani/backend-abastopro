@@ -8,29 +8,46 @@
 
     <ul v-else class="pedidos-list">
       <li
-        v-for="pedido in pedidos"
-        :key="pedido.id"
+        v-for="subpedido in pedidos"
+        :key="subpedido.id"
         class="pedido-item"
       >
-        <div v-if="pedido.pedido">
+        <div v-if="subpedido.pedido">
           <div class="pedido-header">
-            <span class="pedido-id">Pedido ID: {{ pedido.pedido.id }}</span>
-            <span class="pedido-cantidad">Cantidad: {{ pedido.cantidad }}</span>
+            <span class="pedido-id">Pedido ID: {{ subpedido.pedido.id }}</span>
+            <span class="pedido-estado">Estado: {{ subpedido.estado }}</span>
           </div>
-          <div class="pedido-body">
-            <p><strong>Tienda:</strong> {{ pedido.pedido.tienda?.usuario?.nombre || 'N/A' }}</p>
-            <p><strong>Producto:</strong> {{ pedido.producto?.nombre || 'N/A' }}</p>
-            <p><strong>Estado:</strong> {{ pedido.pedido.estado }}</p>
 
-            <!-- Botones condicionales según el estado -->
+          <div class="pedido-body">
+            <p><strong>Tienda:</strong> {{ subpedido.pedido.tienda?.usuario?.nombre || 'N/A' }}</p>
+
+            <div v-if="subpedido.detalles.length > 0">
+              <p><strong>Productos:</strong></p>
+              <ul class="productos-list">
+                <li v-for="detalle in subpedido.detalles" :key="detalle.id" class="producto-item">
+                  <div class="producto-info">
+                    <img
+                      v-if="detalle.producto?.imagen"
+                      :src="getImagenUrl(detalle.producto.imagen)"
+                      alt="Imagen del producto"
+                      class="producto-imagen"
+                    />
+                            <div class="producto-detalles">
+                              {{ detalle.producto?.nombre }} (x{{ detalle.cantidad }}) - {{ formatearPrecio(detalle.precio_unitario) }}
+                            </div>
+                  </div>
+                </li>
+              </ul>
+            </div>
+
             <div class="acciones-pedido">
-              <button v-if="pedido.pedido.estado === 'pendiente'" @click="cambiarEstado(pedido.pedido.id, 'aprobado')">
+              <button v-if="subpedido.estado === 'pendiente'" @click="cambiarEstado(subpedido.id, 'aceptado')">
                 Aprobar
               </button>
-              <button v-if="pedido.pedido.estado === 'aceptado'" @click="cambiarEstado(pedido.pedido.id, 'en_camino')">
+              <button v-if="subpedido.estado === 'aceptado'" @click="cambiarEstado(subpedido.id, 'en_camino')">
                 Marcar como En Camino
               </button>
-              <button v-if="pedido.pedido.estado === 'en_camino'" @click="cambiarEstado(pedido.pedido.id, 'entregado')">
+              <button v-if="subpedido.estado === 'en_camino'" @click="cambiarEstado(subpedido.id, 'entregado')">
                 Marcar como Entregado
               </button>
             </div>
@@ -52,12 +69,18 @@ const pedidos = ref([]);
 const loading = ref(false);
 const error = ref(null);
 
+// Construye la URL completa de la imagen si es relativa
+const getImagenUrl = (imagenPath) => {
+  if (!imagenPath) return '';
+  return imagenPath.startsWith('http') ? imagenPath : `http://localhost:8000/storage/${imagenPath}`;
+};
+
 const fetchPedidos = async () => {
   loading.value = true;
   error.value = null;
   try {
     const token = localStorage.getItem('token');
-    const response = await axios.get('http://localhost:8000/api/pedidos-distribuidor', {
+    const response = await axios.get('http://localhost:8000/api/pedidos/distribuidor', {
       headers: {
         Authorization: `Bearer ${token}`
       }
@@ -71,10 +94,10 @@ const fetchPedidos = async () => {
   }
 };
 
-const cambiarEstado = async (pedidoId, nuevoEstado) => {
+const cambiarEstado = async (subpedidoId, nuevoEstado) => {
   try {
     const token = localStorage.getItem('token');
-    await axios.patch(`http://localhost:8000/api/pedidos/${pedidoId}/estado`, {
+    await axios.patch(`http://localhost:8000/api/subpedidos/${subpedidoId}/estado`, {
       estado: nuevoEstado
     }, {
       headers: {
@@ -82,12 +105,23 @@ const cambiarEstado = async (pedidoId, nuevoEstado) => {
       }
     });
 
-    await fetchPedidos(); // Recargar la lista tras el cambio
+    await fetchPedidos(); // Refresca los pedidos tras actualizar
   } catch (err) {
     console.error('Error al cambiar estado:', err.response?.data || err.message);
-    alert('No se pudo cambiar el estado del pedido.');
+    alert('No se pudo cambiar el estado del subpedido.');
   }
 };
+
+const formatearPrecio = (valor) => {
+  if (valor == null || isNaN(valor)) return ''
+  return new Intl.NumberFormat('es-CO', {
+    style: 'currency',
+    currency: 'COP',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
+  }).format(valor)
+}
+
 
 onMounted(() => {
   fetchPedidos();
@@ -96,106 +130,51 @@ onMounted(() => {
 
 <style scoped>
 .pedidos-container {
-  max-width: 700px;
-  margin: 30px auto;
-  padding: 25px 30px;
-  background-color: #111;
-  color: #eee;
-  border-radius: 12px;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.6);
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-}
-
-.pedidos-container h2 {
-  margin-bottom: 25px;
-  font-weight: 700;
-  font-size: 28px;
-  border-bottom: 2px solid #444;
-  padding-bottom: 10px;
-  color: #f0f0f0;
-}
-
-.loading,
-.error,
-.no-pedidos {
-  text-align: center;
-  font-size: 16px;
-  padding: 15px 0;
-}
-
-.error {
-  color: #ff4c4c;
-}
-
-.pedidos-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
 }
 
 .pedido-item {
-  background-color: #222;
-  margin-bottom: 15px;
-  padding: 20px 25px;
-  border-radius: 10px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
-  cursor: default;
-}
-
-.pedido-item:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.9);
+  border: 1px solid #ccc;
+  border-radius: 12px;
+  margin-bottom: 20px;
+  padding: 15px;
+  background-color: #f9f9f9;
 }
 
 .pedido-header {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 12px;
-  font-weight: 600;
-  color: #ddd;
-  font-size: 16px;
+  font-weight: bold;
+  margin-bottom: 10px;
 }
 
-.pedido-id {
-  color: #ccc;
+.productos-list {
+  list-style: none;
+  padding-left: 0;
 }
 
-.pedido-cantidad {
-  background-color: #444;
-  padding: 4px 10px;
-  border-radius: 15px;
-  font-size: 14px;
-  color: #eee;
-  user-select: none;
+.producto-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
 }
 
-.pedido-body p {
-  margin: 6px 0;
-  color: #bbb;
-  font-size: 15px;
-  line-height: 1.4;
+.producto-imagen {
+  width: 60px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-right: 10px;
+  border: 1px solid #ddd;
 }
 
-.pedido-body strong {
-  color: #fff;
+.acciones-pedido {
+  margin-top: 15px;
 }
 
 .acciones-pedido button {
-  margin-top: 10px;
-  margin-right: 8px;
-  padding: 6px 14px;
-  font-size: 14px;
-  font-weight: bold;
-  border: none;
-  border-radius: 6px;
-  background-color: #3a8;
-  color: white;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.acciones-pedido button:hover {
-  background-color: #2a6;
+  margin-right: 10px;
 }
 </style>

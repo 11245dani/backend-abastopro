@@ -10,56 +10,86 @@ use App\Models\DetallePedido;
 
 
 
+
 use Illuminate\Http\Request;
 
 class PedidoControllerr extends Controller
 {
-    public function pedidosDistribuidor()
-{
-    $usuario = auth()->user();
 
-    if ($usuario->rol !== 'gestor_despacho') {
-        return response()->json(['error' => 'No autorizado'], 403);
-    }
-
-    // Obtener productos del distribuidor
-    $productos = $usuario->distribuidor->productos()->pluck('id');
-
-    // Obtener detalles de pedidos que contienen esos productos
-    $detallePedidos = DetallePedido::with(['pedido.tienda.usuario', 'producto'])
-        ->whereIn('producto_id', $productos)
-        ->get();
-
-    return response()->json($detallePedidos);
-}
-
-public function actualizarEstado(Request $request, $pedidoId)
+public function store(Request $request)
 {
     $request->validate([
-        'estado' => 'required|in:aceptado,en_camino,entregado'
+        'productos' => 'required|array',
+        'productos.*.id' => 'required|exists:productos,id',
+        'productos.*.cantidad' => 'required|integer|min:1',
     ]);
 
-    $pedido = Pedido::findOrFail($pedidoId);
-
-    // Verifica que el pedido contiene productos del distribuidor autenticado
     $usuario = auth()->user();
+    $tienda = $usuario->tienda;
+
+    DB::beginTransaction();
+    try {
+        $pedido = Pedido::create([
+            'tienda_id' => $tienda->id,
+            'estado' => 'pendiente',
+        ]);
+
+        $agrupadoPorDistribuidor = [];
+
+        foreach ($request->productos as $item) {
+            $producto = Producto::find($item['id']);
+            $distribuidorId = $producto->distribuidor_id;
+
+            $agrupadoPorDistribuidor[$distribuidorId][] = [
+                'producto' => $producto,
+                'cantidad' => $item['cantidad']
+            ];
+        }
+
+        foreach ($agrupadoPorDistribuidor as $distribuidorId => $items) {
+            $subpedido = Subpedido::create([
+                'pedido_id' => $pedido->id,
+                'distribuidor_id' => $distribuidorId,
+                'estado' => 'pendiente'
+            ]);
+
+            foreach ($items as $item) {
+                $producto = $item['producto'];
+                DetalleSubpedido::create([
+                    'subpedido_id' => $subpedido->id,
+                    'producto_id' => $producto->id,
+                    'cantidad' => $item['cantidad'],
+                    'precio_unitario' => $producto->precio,
+                ]);
+            }
+        }
+
+        DB::commit();
+
+        return response()->json(['mensaje' => 'Pedido creado correctamente', 'pedido_id' => $pedido->id]);
+
+    } catch (\Exception $e) {
+        DB::rollBack();
+        return response()->json(['error' => $e->getMessage()], 500);
+    }
+}
+
+public function subpedidosDistribuidor()
+{
+    $usuario = auth()->user();
+
     if ($usuario->rol !== 'gestor_despacho') {
         return response()->json(['error' => 'No autorizado'], 403);
     }
 
-    $productoIds = $usuario->distribuidor->productos()->pluck('id')->toArray();
-    $tieneProducto = DetallePedido::where('pedido_id', $pedido->id)
-        ->whereIn('producto_id', $productoIds)
-        ->exists();
+    $distribuidor = $usuario->distribuidor;
 
-    if (!$tieneProducto) {
-        return response()->json(['error' => 'No autorizado para modificar este pedido'], 403);
-    }
+    $subpedidos = Subpedido::with(['pedido.tienda.usuario', 'detalles.producto'])
+        ->where('distribuidor_id', $distribuidor->id)
+        ->orderBy('created_at', 'desc')
+        ->get();
 
-    $pedido->estado = $request->estado;
-    $pedido->save();
-
-    return response()->json(['message' => 'Estado del pedido actualizado', 'pedido' => $pedido]);
+    return response()->json($subpedidos);
 }
 
 public function historialPedidosTienda()
@@ -70,7 +100,7 @@ public function historialPedidosTienda()
         return response()->json(['error' => 'No autorizado'], 403);
     }
 
-    $pedidos = Pedido::with('detalles.producto')
+    $pedidos = Pedido::with(['subpedidos.detalles.producto', 'subpedidos.distribuidor.usuario'])
         ->where('tienda_id', $usuario->tienda->id)
         ->orderBy('created_at', 'desc')
         ->get();
@@ -78,34 +108,83 @@ public function historialPedidosTienda()
     return response()->json($pedidos);
 }
 
-public function cambiarEstado(Request $request, $id)
+public function actualizarEstadoSubpedido(Request $request, $id)
 {
-    try {
-        $pedido = Pedido::find($id);
+    $request->validate([
+        'estado' => 'required|in:aceptado,en_camino,entregado,cancelado'
+    ]);
 
-        if (!$pedido) {
-            return response()->json(['error' => 'Pedido no encontrado'], 404);
-        }
+    $usuario = auth()->user();
 
-        // ✅ Validar que el estado sea uno permitido
-        $request->validate([
-            'estado' => 'required|in:pendiente,procesado,enviado,entregado,cancelado,aceptado'
-        ]);
-
-        // ✅ Obtener el nuevo estado ya validado
-        $nuevoEstado = $request->input('estado');
-
-        $pedido->estado = $nuevoEstado;
-        $pedido->save();
-
-        return response()->json(['mensaje' => 'Estado actualizado correctamente']);
-    } catch (Exception $e) {
-        return response()->json([
-            'error' => 'Error interno al actualizar el estado',
-            'exception' => $e->getMessage()
-        ], 500);
+    if ($usuario->rol !== 'gestor_despacho') {
+        return response()->json(['error' => 'No autorizado'], 403);
     }
+
+    $subpedido = Subpedido::where('id', $id)
+        ->where('distribuidor_id', $usuario->distribuidor->id)
+        ->first();
+
+    if (!$subpedido) {
+        return response()->json(['error' => 'Subpedido no encontrado o no autorizado'], 403);
+    }
+
+    $subpedido->estado = $request->estado;
+    $subpedido->save();
+
+    return response()->json(['mensaje' => 'Estado del subpedido actualizado', 'subpedido' => $subpedido]);
+}
+
+public function confirmarEntregaTienda($id)
+{
+    $usuario = auth()->user();
+
+    if (!$usuario->tienda) {
+        return response()->json(['error' => 'No autorizado'], 403);
+    }
+
+    $pedido = Pedido::where('id', $id)
+        ->where('tienda_id', $usuario->tienda->id)
+        ->with('subpedidos')
+        ->first();
+
+    if (!$pedido) {
+        return response()->json(['error' => 'Pedido no encontrado'], 404);
+    }
+
+    // Verificar que todos los subpedidos estén entregados
+    $todosEntregados = $pedido->subpedidos->every(function ($subpedido) {
+        return $subpedido->estado === 'entregado';
+    });
+
+    if (!$todosEntregados) {
+        return response()->json(['error' => 'No todos los subpedidos están entregados'], 400);
+    }
+
+    $pedido->estado = 'entregado';
+    $pedido->save();
+
+    return response()->json(['mensaje' => 'Pedido confirmado como entregado por la tienda']);
 }
 
 
+public function pedidosTienda(Request $request)
+{
+    $usuario = $request->user();
+
+    if (!$usuario->tienda) {
+        return response()->json(['message' => 'El usuario no es un tendero válido.'], 403);
+    }
+
+    $pedidos = Pedido::where('tienda_id', $usuario->tienda->id)
+        ->with([
+            'subpedidos.distribuidor.usuario',
+            'subpedidos.detalles.producto.marca',
+            'subpedidos.detalles.producto.categoria',
+        ])
+        ->orderByDesc('created_at')
+        ->get();
+
+    return response()->json($pedidos);
+}
+ 
 }

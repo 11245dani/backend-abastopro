@@ -20,10 +20,16 @@ class Pedido extends Model
     return $this->hasMany(DetallePedido::class);
 }
 
-public function tienda()
-{
+public function tienda() {
     return $this->belongsTo(Tienda::class);
 }
+
+public function subpedidos() {
+    return $this->hasMany(Subpedido::class);
+}
+
+
+
 
 
 

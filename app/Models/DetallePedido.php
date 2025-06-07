@@ -7,12 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class DetallePedido extends Model
 {
-    use HasFactory;
-
-        
+    use HasFactory;   
     protected $table = 'detalle_pedidos'; // o el nombre correcto de tu tabla
-
-
         protected $fillable = [
         'pedido_id',
         'producto_id',

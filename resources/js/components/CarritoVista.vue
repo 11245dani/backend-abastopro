@@ -5,16 +5,23 @@
       <h2 class="titulo">Carrito de Compras</h2>
       <div v-if="carrito.length === 0" class="texto-vacio">El carrito está vacío</div>
       <div v-else>
-        <div v-for="(producto, index) in carrito" :key="index" class="producto">
+        <div v-for="(producto, index) in carrito" :key="producto.id" class="producto">
           <div class="producto-info">
-              <img :src="getImagen(producto.imagen)" class="imagen-producto" alt="producto" />
+            <img :src="getImagen(producto.imagen)" class="imagen-producto" alt="producto" />
             <div>
               <p class="nombre-producto">{{ producto.nombre }}</p>
               <p class="distribuidor">{{ producto.distribuidor || 'Distribuidor' }}</p>
-              <div class="cantidad">
-                <button @click="disminuirCantidad(index)">−</button>
-                <span>{{ producto.cantidad }}</span>
-                <button @click="aumentarCantidad(index)">+</button>
+              <div class="cantidad-input">
+                <input
+                  type="number"
+                  v-model.number="producto.cantidad"
+                  :min="1"
+                  :max="producto.stock"
+                  @change="validarCantidad(producto)"
+                />
+                <span v-if="producto.cantidad > producto.stock" class="error">
+                  Solo hay {{ producto.stock }} disponibles.
+                </span>
               </div>
             </div>
           </div>
@@ -36,15 +43,22 @@
       <div class="linea total"><span>Total</span><span>{{ formatearPrecio(total) }}</span></div>
 
       <label class="etiqueta" for="notas">Notas del pedido</label>
-      <textarea id="notas" class="notas" placeholder="Instrucciones especiales para el distribuidor..."></textarea>
+      <textarea
+        id="notas"
+        class="notas"
+        placeholder="Instrucciones especiales para el distribuidor..."
+        v-model="notas"
+      ></textarea>
 
       <p class="etiqueta">Método de pago</p>
       <div class="metodo-pago">
-        <label><input type="radio" name="metodo_pago" value="tarjeta" checked /> Tarjeta de crédito</label>
-        <label><input type="radio" name="metodo_pago" value="transferencia" /> Transferencia bancaria</label>
+        <label><input type="radio" name="metodo_pago" value="tarjeta" v-model="metodoPago" /> Tarjeta de crédito</label>
+        <label><input type="radio" name="metodo_pago" value="transferencia" v-model="metodoPago" /> Transferencia bancaria</label>
       </div>
 
-      <button class="boton-pago" @click="procederAlPago">Proceder al pago</button>
+      <button class="boton-pago" @click="procederAlPago" :disabled="carrito.length === 0">
+        Proceder al pago
+      </button>
     </div>
   </div>
 </template>
@@ -56,27 +70,31 @@ import { useRouter } from 'vue-router'
 
 const router = useRouter()
 const carrito = ref([])
+const notas = ref('')
+const metodoPago = ref('tarjeta')
 
 onMounted(() => {
   const guardado = localStorage.getItem('carrito')
   carrito.value = guardado ? JSON.parse(guardado) : []
-  carrito.value.forEach(p => console.log('Imagen:', p.imagen))
+  // Normalmente querrás validar que cada producto tenga las propiedades necesarias
 })
 
 function guardarCarrito() {
   localStorage.setItem('carrito', JSON.stringify(carrito.value))
 }
 
-function aumentarCantidad(index) {
-  carrito.value[index].cantidad++
+function validarCantidad(producto) {
+  if (producto.cantidad > producto.stock) {
+    producto.cantidad = producto.stock
+    mostrarError(`Stock insuficiente: solo quedan ${producto.stock} unidades.`)
+  } else if (producto.cantidad < 1) {
+    producto.cantidad = 1
+  }
   guardarCarrito()
 }
 
-function disminuirCantidad(index) {
-  if (carrito.value[index].cantidad > 1) {
-    carrito.value[index].cantidad--
-    guardarCarrito()
-  }
+function mostrarError(mensaje) {
+  alert(mensaje) // Puedes reemplazar por un componente toast
 }
 
 function eliminarProducto(index) {
@@ -88,18 +106,29 @@ const getImagen = (ruta) => {
   return ruta || '/img/producto_default.jpg'
 }
 
-
-
-
 async function procederAlPago() {
-  try {
-    const response = await axios.post('/api/carrito/confirmar', {}, {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('token')}`
-      }
-    })
+  if (carrito.value.some(p => p.cantidad > p.stock)) {
+    mostrarError('Hay productos con cantidad mayor al stock disponible.')
+    return
+  }
 
-    alert('Pedido confirmado correctamente.')
+  try {
+    const productosParaEnviar = carrito.value.map(p => ({
+      id: p.id,
+      cantidad: p.cantidad
+    }))
+
+    const response = await axios.post(
+      '/api/carrito/confirmar',
+      { productos: productosParaEnviar, notas: notas.value, metodo_pago: metodoPago.value },
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`
+        }
+      }
+    )
+
+    alert(response.data.message || 'Pedido confirmado correctamente.')
     carrito.value = []
     localStorage.removeItem('carrito')
     router.push('/mis-pedidos')
@@ -112,7 +141,7 @@ async function procederAlPago() {
 const subtotal = computed(() =>
   carrito.value.reduce((sum, p) => sum + p.precio * p.cantidad, 0)
 )
-const envio = computed(() => 10000) // Puedes ajustar esto
+const envio = computed(() => 10000) // Puedes hacer dinámico este valor
 const impuestos = computed(() => subtotal.value * 0.1)
 const total = computed(() => subtotal.value + envio.value + impuestos.value)
 
@@ -125,6 +154,8 @@ const formatearPrecio = (precio) => {
   }).format(precio)
 }
 </script>
+
+
 <style scoped>
 .contenedor-carrito {
   display: flex;
