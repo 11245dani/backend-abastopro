@@ -52,6 +52,20 @@
                   {{ capitalizarEstado(estado) }}
                 </option>
               </select>
+
+            <button v-if="subpedido.estado === 'pendiente'" @click="cambiarEstado(subpedido.id, 'aceptado')">
+                Aprobar
+              </button>
+               <button v-if="subpedido.estado === 'aceptado'" @click="cambiarEstado(subpedido.id, 'procesado')">
+                Marcar como procesado
+              </button>
+              <button v-if="subpedido.estado === 'procesado'" @click="cambiarEstado(subpedido.id, 'en_camino')">
+                Marcar como En Camino
+              </button>
+              <button v-if="subpedido.estado === 'en_camino'" @click="cambiarEstado(subpedido.id, 'entregado')">
+                Marcar como Entregado
+              </button>
+            
             </div>
           </div>
         </div>

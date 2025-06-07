@@ -2,7 +2,7 @@
   <div>
     <header>
       <div class="logo-text">
-        <img src="@/images/logoname.png" alt="Logo AbastoPro" />
+        <img src="@/images/logoname2.png" alt="Logo AbastoPro" />
       </div>
       <nav>
         <a href="/Login">Iniciar sesión</a>
@@ -20,13 +20,13 @@
         </div>
       </div>
       <div class="main-image">
-        <img src="@/images/Logo.jpeg" alt="Logo AbastoPro" />
+        <img src="@/images/Logo2.png" alt="Logo AbastoPro" />
       </div>
     </main>
 
     <footer>
       <div class="logo-footer">
-        <img src="@/images/logoname.png" alt="Logo footer" />
+        <img src="@/images/logoname2.png" alt="Logo footer" />
       </div>
       <div>© 2025 AbastoPro. Todos los derechos reservados.</div>
     </footer>
@@ -52,6 +52,7 @@ function goRegister() {
       align-items: center;
       padding: 20px 40px;
       border-bottom: 1px solid #ddd;
+      background-color: white;
     }
 
     .logo-text {

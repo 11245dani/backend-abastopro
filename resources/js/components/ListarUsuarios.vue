@@ -24,7 +24,6 @@
         <option value="rechazado">Rechazado</option>
       </select>
 
-      <!-- ✅ Nuevo filtro de autorización -->
       <select v-model="filtroAutorizacion">
         <option value="">Todas las autorizaciones</option>
         <option value="aprobado">Aprobado</option>
@@ -52,8 +51,6 @@
           <td>{{ usuario.nombre }}</td>
           <td>{{ mostrarRol(usuario.rol) }}</td>
           <td>{{ usuario.estado }}</td>
-
-          <!-- ✅ Visualización del estado de autorización -->
           <td>
             <span
               :class="{
@@ -66,15 +63,13 @@
               {{ usuario.distribuidor?.estado_autorizacion || 'No aplica' }}
             </span>
           </td>
-
           <td>{{ formatearFecha(usuario.created_at) }}</td>
           <td>{{ usuario.correo }}<br />{{ usuario.telefono || 'No disponible' }}</td>
           <td>
-           
             <div v-if="usuario.rol === 'gestor_despacho' && usuario.distribuidor?.estado_autorizacion !== 'aprobado'">
-            <button @click="aprobarGestor(usuario)">Aprobar</button>
-            <button @click="rechazarGestor(usuario)" class="rechazar">Rechazar</button>
-          </div>
+              <button @click="aprobarGestor(usuario)">Aprobar</button>
+              <button @click="rechazarGestor(usuario)" class="rechazar">Rechazar</button>
+            </div>
             <div v-else>
               <button @click="verUsuario(usuario)">Ver</button>
             </div>
@@ -102,7 +97,7 @@ const filtroAutorizacion = ref('');
 
 onMounted(async () => {
   try {
-    const response = await axios.get('http://localhost:8000/api/usuarios', {
+    const response = await axios.get('/api/usuarios', {
       headers: {
         Authorization: `Bearer ${localStorage.getItem('token')}`,
       },
@@ -153,16 +148,12 @@ const aprobarGestor = async (usuario) => {
   if (!confirm(`¿Estás seguro de aprobar a ${usuario.nombre}?`)) return;
 
   try {
-    await axios.put(
-      `/api/admin/aprobar-gestor-despacho/${usuario.id}`,
-      {},
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          Accept: 'application/json',
-        },
-      }
-    );
+    await axios.put(`/api/admin/aprobar-gestor-despacho/${usuario.id}`, {}, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: 'application/json',
+      },
+    });
 
     if (usuario.distribuidor) {
       usuario.distribuidor.estado_autorizacion = 'aprobado';
@@ -177,20 +168,15 @@ const aprobarGestor = async (usuario) => {
 
 const rechazarGestor = async (usuario) => {
   const token = localStorage.getItem('token');
-
   if (!confirm(`¿Estás seguro de rechazar a ${usuario.nombre}?`)) return;
 
   try {
-    const response = await axios.put(
-      `/api/admin/rechazar-gestor-despacho/${usuario.id}`,
-      {},
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          Accept: 'application/json',
-        },
-      }
-    );
+    await axios.put(`/api/admin/rechazar-gestor-despacho/${usuario.id}`, {}, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: 'application/json',
+      },
+    });
 
     if (usuario.distribuidor) {
       usuario.distribuidor.estado_autorizacion = 'rechazado';
@@ -202,80 +188,105 @@ const rechazarGestor = async (usuario) => {
     alert('Error al rechazar al gestor de despacho');
   }
 };
-
 </script>
 
 <style scoped>
 .listar-usuarios {
-  padding: 20px;
+  padding: 24px;
+  background-color: #f9f9f9;
+  border-radius: 10px;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+h2 {
+  color: #333;
+  margin-bottom: 16px;
 }
 
 .filtros {
   display: flex;
+  flex-wrap: wrap;
   gap: 10px;
-  margin-bottom: 15px;
+  margin-bottom: 20px;
 }
 
 .filtros input,
 .filtros select {
-  padding: 8px;
-  border-radius: 5px;
+  padding: 8px 10px;
+  border-radius: 6px;
   border: 1px solid #ccc;
+  background-color: #fff;
+  font-size: 14px;
+  transition: border-color 0.3s ease;
+}
+
+
+.filtros input:focus,
+.filtros select:focus {
+  outline: none;
+  border-color: #99D7A9;
 }
 
 table {
   width: 100%;
   border-collapse: collapse;
-  background-color: white;
+  background-color: #fff;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
 }
 
 th, td {
-  padding: 12px;
-  border: 1px solid #ddd;
+  padding: 12px 16px;
+  border-bottom: 1px solid #eee;
   text-align: left;
 }
 
 th {
-  background-color: #f3f3f3;
+  background-color: #e9f5ec;
+  color: #333;
+  font-weight: 600;
 }
 
 button {
-  padding: 6px 10px;
-  background-color: #1976d2;
-  color: white;
+  padding: 6px 12px;
+  background-color: #99D7A9;
+  color: #fff;
   border: none;
   border-radius: 5px;
+  font-size: 14px;
   cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+button:hover {
+  background-color: #85c395;
 }
 
 button.rechazar {
   background-color: #d32f2f;
-  margin-left: 8px;
 }
 
 button.rechazar:hover {
-  background-color: #c62828;
+  background-color: #b71c1c;
 }
 
-button:hover {
-  background-color: #1565c0;
-}
-
-/* ✅ Estilos para badges */
 .badge {
-  padding: 4px 8px;
+  padding: 4px 10px;
   border-radius: 12px;
-  font-size: 0.8rem;
-  color: white;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #fff;
+  display: inline-block;
   text-transform: capitalize;
 }
 
 .badge-aprobado {
-  background-color: #4caf50;
+  background-color: #99D7A9;
 }
 
 .badge-pendiente {
-  background-color: #ff9800;
+  background-color: #fbc02d;
 }
 
 .badge-rechazado {
@@ -284,5 +295,11 @@ button:hover {
 
 .badge-desconocido {
   background-color: #9e9e9e;
+}
+
+table td[colspan="7"] {
+  text-align: center;
+  color: #777;
+  padding: 20px;
 }
 </style>
