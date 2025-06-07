@@ -145,6 +145,7 @@ body {
 .title {
   text-align: center;
   margin-bottom: 20px;
+  font-family: Arial, sans-serif;
 }
 
 .account-type {
@@ -155,16 +156,15 @@ body {
 
 .account-type button {
   padding: 10px;
-  border: none;
+  border: 1px solid #ccc;
   border-radius: 5px;
   cursor: pointer;
-  background-color: #e0e0e0;
+  background-color: whitesmoke;
   font-weight: normal;
 }
 
 .account-type button.active {
-  background-color: #fff;
-  font-weight: bold;
+  background-color: #99D7A9;
   border: 1px solid #ccc;
 }
 
@@ -189,5 +189,6 @@ input {
 .toggle {
   text-align: center;
   margin-top: 20px;
+  font-family: Arial, sans-serif;
 }
 </style>

@@ -3,8 +3,7 @@
     <!-- Header -->
 <header class="header">
   <div class="logo-text">
-    <img src="@/images/Logo.jpeg" alt="Logo AbastoPro" />
-    AbastoPro
+    <img src="@/images/logoname.png" alt="Logo AbastoPro" />
   </div>
   <div class="header-icons">
     <div class="cart-icon" @click="irACarrito">
@@ -28,9 +27,6 @@
     <div class="main-container">
       <!-- Panel lateral -->
       <aside class="Tendero-panel">
-        <div class="logo-text">
-          <img src="@/images/Logo.jpeg" alt="Logo AbastoPro" />
-        </div>
         <ul class="menu">
           <li @click="irAProductos">Productos</li>
           <li @click="irAMisPedidos">Mis pedidos</li>
@@ -123,6 +119,7 @@ const irAMisPedidos = () => {
   list-style: none;
   padding: 0;
   margin-top: 20px;
+  font-family: Arial, Helvetica, sans-serif;
 }
 
 .menu li {
@@ -198,6 +195,7 @@ const irAMisPedidos = () => {
   list-style: none;
   margin: 0;
   padding: 0;
+  font-family: Arial, Helvetica, sans-serif;
 }
 
 .dropdown li {
@@ -207,7 +205,7 @@ const irAMisPedidos = () => {
 }
 
 .dropdown li:hover {
-  background-color: #f0f0f0;
+  background-color: #99D7A9;
 }
 
 /* Contenido */
@@ -228,10 +226,11 @@ const irAMisPedidos = () => {
   font-size: 18px;
   font-weight: 500;
   margin: 0;
+  font-family: Arial,sans-serif;;
 }
 
 .btn-ver {
-  background-color: black;
+  background-color: #069E2E;
   color: white;
   border: none;
   padding: 10px 20px;

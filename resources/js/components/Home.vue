@@ -2,8 +2,7 @@
   <div>
     <header>
       <div class="logo-text">
-        <img src="@/images/Logo.jpeg" alt="Logo AbastoPro" />
-        AbastoPro
+        <img src="@/images/logoname.png" alt="Logo AbastoPro" />
       </div>
       <nav>
         <a href="/Login">Iniciar sesión</a>
@@ -27,8 +26,7 @@
 
     <footer>
       <div class="logo-footer">
-        <img src="@/images/Logo.jpeg" alt="Logo footer" />
-        AbastoPro
+        <img src="@/images/logoname.png" alt="Logo footer" />
       </div>
       <div>© 2025 AbastoPro. Todos los derechos reservados.</div>
     </footer>
@@ -58,13 +56,15 @@ function goRegister() {
 
     .logo-text {
       display: flex;
+      font-family: Arial, sans-serif;
       align-items: center;
       font-weight: bold;
+      color: #0C4D39;
       font-size: 22px;
     }
 
     .logo-text img {
-      height: 40px;
+      height: 50px;
       margin-right: 10px;
     }
 
@@ -73,10 +73,12 @@ function goRegister() {
       text-decoration: none;
       color: #000;
       font-size: 15px;
+      font-family: Arial, sans-serif;
     }
 
     nav a:hover {
       text-decoration: underline;
+      font-family: Arial, sans-serif;
     }
 
     .btn {
@@ -106,9 +108,11 @@ function goRegister() {
     .main-text h1 {
       font-size: 34px;
       margin-bottom: 20px;
+      font-family: Arial, sans-serif;
     }
 
     .main-text p {
+      font-family: Arial;
       font-size: 18px;
       color: #555;
       margin-bottom: 30px;
@@ -141,6 +145,7 @@ function goRegister() {
       border-top: 1px solid #ddd;
       color: #555;
       font-size: 14px;
+      font-family: Arial, sans-serif;
     }
 
     footer .logo-footer {

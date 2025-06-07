@@ -41,6 +41,7 @@
             </div>
 
             <div class="acciones-pedido">
+
               <button v-if="subpedido.estado === 'pendiente'" @click="cambiarEstado(subpedido.id, 'aceptado')">
                 Aprobar
               </button>

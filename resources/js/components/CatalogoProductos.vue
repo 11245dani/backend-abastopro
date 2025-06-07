@@ -1,8 +1,13 @@
 <template>
-  <header class="header">
-    <div class="logo-text">
-      <img src="@/images/Logo.jpeg" alt="Logo AbastoPro" />
-      AbastoPro
+
+    <!-- Header -->
+<header class="header">
+  <div class="logo-text">
+    <img src="@/images/logoname.png" alt="Logo AbastoPro" />
+  </div>
+  <div class="header-icons">
+    <div class="cart-icon" @click="irACarrito">
+      <img src="@/images/cart-icon.png" alt="Carrito" class="icon" />
     </div>
     <div class="user-menu" @click="toggleMenu">
       <img src="@/images/user-icon.png" alt="Perfil" class="icon" />
@@ -14,7 +19,8 @@
         </ul>
       </div>
     </div>
-  </header>
+  </div>
+</header>
 
   <div class="catalogo-container">
     <!-- Notificación simple -->
@@ -257,6 +263,10 @@ const actualizarDatos = () => {
   router.push('/actualizar-datos')
 }
 
+const irACarrito = () => {
+  router.push('/CarritoVista');
+};
+
 const cerrarSesion = () => {
   localStorage.removeItem('token')
   localStorage.removeItem('usuario')
@@ -312,6 +322,7 @@ onMounted(() => {
   font-size: 22px;
 }
 
+
 .logo-text img {
   height: 40px;
   margin-right: 10px;
@@ -354,6 +365,23 @@ onMounted(() => {
 .dropdown li:hover {
   background-color: #f0f0f0;
 }
+
+.header-icons {
+  display: flex;
+  align-items: center;
+  gap: 15px; /* Espacio entre los íconos */
+}
+
+.cart-icon .icon {
+  width: 28px;
+  height: 28px;
+  cursor: pointer;
+}
+
+.cart-icon .icon:hover {
+  filter: brightness(0.8);
+}
+
 
 .catalogo-container {
   display: flex;
