@@ -134,6 +134,7 @@ onMounted(() => {
   max-width: 800px;
   margin: 0 auto;
   padding: 20px;
+  font-family: 'Segoe UI', sans-serif;
 }
 
 .pedido-item {
@@ -141,7 +142,13 @@ onMounted(() => {
   border-radius: 12px;
   margin-bottom: 20px;
   padding: 15px;
-  background-color: #f9f9f9;
+  background-color: #fdfdfd;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  transition: box-shadow 0.3s ease;
+}
+
+.pedido-item:hover {
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
 }
 
 .pedido-header {
@@ -149,11 +156,18 @@ onMounted(() => {
   justify-content: space-between;
   font-weight: bold;
   margin-bottom: 10px;
+  color: #333;
+}
+
+.pedido-estado {
+  font-size: 14px;
+  color: #888;
 }
 
 .productos-list {
   list-style: none;
   padding-left: 0;
+  margin-top: 10px;
 }
 
 .producto-item {
@@ -171,11 +185,70 @@ onMounted(() => {
   border: 1px solid #ddd;
 }
 
+.producto-detalles {
+  font-size: 15px;
+  color: #444;
+}
+
 .acciones-pedido {
   margin-top: 15px;
 }
 
 .acciones-pedido button {
+  background-color: #3498db;
+  color: white;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.3s, transform 0.2s;
   margin-right: 10px;
+}
+
+.acciones-pedido button:hover {
+  background-color: #2980b9;
+  transform: translateY(-1px);
+}
+
+.loading,
+.no-pedidos {
+  text-align: center;
+  color: #555;
+  font-size: 16px;
+  margin: 20px 0;
+}
+
+.error {
+  text-align: center;
+  color: #e74c3c;
+  font-weight: 500;
+  font-size: 16px;
+  margin: 20px 0;
+}
+
+/* Estilos adicionales por estado */
+.btn-aprobar {
+  background-color: #2ecc71;
+}
+
+.btn-aprobar:hover {
+  background-color: #27ae60;
+}
+
+.btn-camino {
+  background-color: #f39c12;
+}
+
+.btn-camino:hover {
+  background-color: #e67e22;
+}
+
+.btn-entregado {
+  background-color: #8e44ad;
+}
+
+.btn-entregado:hover {
+  background-color: #71368a;
 }
 </style>

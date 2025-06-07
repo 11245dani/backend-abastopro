@@ -73,6 +73,9 @@ export default {
 <style scoped>
 body {
   font-family: 'Segoe UI', sans-serif;
+  background-color: #f4f6f8;
+  margin: 0;
+  padding: 0;
 }
 
 .forgot-password-page {
@@ -80,29 +83,41 @@ body {
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  background-color: #f4f6f8;
   padding: 2rem;
+  position: relative;
 }
 
 .form-wrapper {
   max-width: 450px;
   width: 100%;
+  animation: fadeInUp 0.6s ease;
 }
 
 .back-link {
-  display: block;
+  display: inline-block;
   margin-bottom: 1rem;
   color: #3498db;
   text-decoration: none;
   font-weight: 500;
   font-size: 14px;
+  transition: color 0.3s;
+}
+
+.back-link:hover {
+  color: #21618c;
+  text-decoration: underline;
 }
 
 .form-container {
-  background-color: white;
+  background-color: #ffffff;
   padding: 2rem;
   border-radius: 12px;
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+  transition: box-shadow 0.3s ease;
+}
+
+.form-container:hover {
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
 }
 
 h2 {
@@ -135,12 +150,14 @@ input[type="email"] {
   border: 1px solid #ccc;
   border-radius: 8px;
   font-size: 15px;
-  transition: border-color 0.3s;
+  transition: border-color 0.3s, box-shadow 0.3s;
+  background-color: #fdfdfd;
 }
 
 input[type="email"]:focus {
   border-color: #3498db;
   outline: none;
+  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
 }
 
 .submit-btn {
@@ -153,23 +170,26 @@ input[type="email"]:focus {
   font-size: 16px;
   font-weight: 500;
   cursor: pointer;
-  transition: background-color 0.3s;
+  transition: background-color 0.3s, box-shadow 0.3s;
 }
 
 .submit-btn:hover {
   background-color: #99D7A9;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
 }
 
 .success-message {
   margin-top: 1rem;
   color: #2ecc71;
   font-weight: 500;
+  animation: fadeIn 0.4s ease;
 }
 
 .error-message {
   margin-top: 1rem;
   color: #e74c3c;
   font-weight: 500;
+  animation: fadeIn 0.4s ease;
 }
 
 /* Toast */
@@ -190,6 +210,81 @@ input[type="email"]:focus {
   background-color: #2ecc71;
 }
 
+/* MODAL general */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.45);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+  animation: fadeIn 0.3s ease;
+}
+
+.modal {
+  background-color: white;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  max-width: 380px;
+  width: 100%;
+  text-align: center;
+  animation: scaleUp 0.4s ease;
+}
+
+.modal h3 {
+  font-size: 20px;
+  margin-bottom: 1rem;
+}
+
+.modal p {
+  font-size: 16px;
+  color: #444;
+  margin-bottom: 1.5rem;
+}
+
+.modal button {
+  background-color: #3498db;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.3s ease;
+}
+
+.modal button:hover {
+  background-color: #2b7db4;
+}
+
+/* MODALES diferenciados */
+.modal-success h3 {
+  color: #27ae60;
+}
+
+.modal-error h3 {
+  color: #e74c3c;
+}
+
+.modal-success button {
+  background-color: #27ae60;
+}
+
+.modal-success button:hover {
+  background-color: #1e8449;
+}
+
+.modal-error button {
+  background-color: #e74c3c;
+}
+
+.modal-error button:hover {
+  background-color: #c0392b;
+}
+
+/* Animaciones */
 @keyframes slideDown {
   from {
     opacity: 0;
@@ -205,6 +300,37 @@ input[type="email"]:focus {
   to {
     opacity: 0;
     transform: translateY(-20px);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(25px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scaleUp {
+  from {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
   }
 }
 </style>
