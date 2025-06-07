@@ -1,3 +1,4 @@
+
 <template>
   <div class="pedidos-container">
     <h2>Pedidos Recibidos</h2>
@@ -7,15 +8,11 @@
     <div v-else-if="pedidos.length === 0" class="no-pedidos">No hay pedidos disponibles.</div>
 
     <ul v-else class="pedidos-list">
-      <li
-        v-for="subpedido in pedidos"
-        :key="subpedido.id"
-        class="pedido-item"
-      >
+      <li v-for="subpedido in pedidos" :key="subpedido.id" class="pedido-item">
         <div v-if="subpedido.pedido">
           <div class="pedido-header">
             <span class="pedido-id">Pedido ID: {{ subpedido.pedido.id }}</span>
-            <span class="pedido-estado">Estado: {{ subpedido.estado }}</span>
+            <span class="pedido-estado">Estado actual: {{ capitalizarEstado(subpedido.estado) }}</span>
           </div>
 
           <div class="pedido-body">
@@ -32,25 +29,29 @@
                       alt="Imagen del producto"
                       class="producto-imagen"
                     />
-                            <div class="producto-detalles">
-                              {{ detalle.producto?.nombre }} (x{{ detalle.cantidad }}) - {{ formatearPrecio(detalle.precio_unitario) }}
-                            </div>
+                    <div class="producto-detalles">
+                      {{ detalle.producto?.nombre }} (x{{ detalle.cantidad }}) - {{ formatearPrecio(detalle.precio_unitario) }}
+                    </div>
                   </div>
                 </li>
               </ul>
             </div>
 
             <div class="acciones-pedido">
-
-              <button v-if="subpedido.estado === 'pendiente'" @click="cambiarEstado(subpedido.id, 'aceptado')">
-                Aprobar
-              </button>
-              <button v-if="subpedido.estado === 'aceptado'" @click="cambiarEstado(subpedido.id, 'en_camino')">
-                Marcar como En Camino
-              </button>
-              <button v-if="subpedido.estado === 'en_camino'" @click="cambiarEstado(subpedido.id, 'entregado')">
-                Marcar como Entregado
-              </button>
+              <label v-if="transicionesEstado[subpedido.estado]" for="estado-select">Cambiar estado:</label>
+              <select
+                v-if="transicionesEstado[subpedido.estado]"
+                @change="cambiarEstado(subpedido.id, $event.target.value)"
+              >
+                <option disabled selected value="">Seleccione estado</option>
+                <option
+                  v-for="estado in transicionesEstado[subpedido.estado]"
+                  :key="estado"
+                  :value="estado"
+                >
+                  {{ capitalizarEstado(estado) }}
+                </option>
+              </select>
             </div>
           </div>
         </div>
@@ -70,10 +71,30 @@ const pedidos = ref([]);
 const loading = ref(false);
 const error = ref(null);
 
-// Construye la URL completa de la imagen si es relativa
+// Transiciones válidas según estado actual (coinciden con los valores del ENUM)
+const transicionesEstado = {
+  pendiente: ['aceptado', 'rechazado'],
+  aceptado: ['en_camino'],
+  en_camino: ['entregado']
+};
+
 const getImagenUrl = (imagenPath) => {
   if (!imagenPath) return '';
   return imagenPath.startsWith('http') ? imagenPath : `http://localhost:8000/storage/${imagenPath}`;
+};
+
+const formatearPrecio = (valor) => {
+  if (valor == null || isNaN(valor)) return ''
+  return new Intl.NumberFormat('es-CO', {
+    style: 'currency',
+    currency: 'COP',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
+  }).format(valor)
+};
+
+const capitalizarEstado = (estado) => {
+  return estado.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
 };
 
 const fetchPedidos = async () => {
@@ -96,6 +117,7 @@ const fetchPedidos = async () => {
 };
 
 const cambiarEstado = async (subpedidoId, nuevoEstado) => {
+  if (!nuevoEstado) return;
   try {
     const token = localStorage.getItem('token');
     await axios.patch(`http://localhost:8000/api/subpedidos/${subpedidoId}/estado`, {
@@ -109,20 +131,9 @@ const cambiarEstado = async (subpedidoId, nuevoEstado) => {
     await fetchPedidos(); // Refresca los pedidos tras actualizar
   } catch (err) {
     console.error('Error al cambiar estado:', err.response?.data || err.message);
-    alert('No se pudo cambiar el estado del subpedido.');
+    alert('No se pudo cambiar el estado del subpedido: ' + (err.response?.data?.error || err.message));
   }
 };
-
-const formatearPrecio = (valor) => {
-  if (valor == null || isNaN(valor)) return ''
-  return new Intl.NumberFormat('es-CO', {
-    style: 'currency',
-    currency: 'COP',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0
-  }).format(valor)
-}
-
 
 onMounted(() => {
   fetchPedidos();
@@ -134,6 +145,14 @@ onMounted(() => {
   max-width: 800px;
   margin: 0 auto;
   padding: 20px;
+}
+
+.loading,
+.error,
+.no-pedidos {
+  text-align: center;
+  margin: 20px 0;
+  font-weight: bold;
 }
 
 .pedido-item {
@@ -173,9 +192,5 @@ onMounted(() => {
 
 .acciones-pedido {
   margin-top: 15px;
-}
-
-.acciones-pedido button {
-  margin-right: 10px;
 }
 </style>
