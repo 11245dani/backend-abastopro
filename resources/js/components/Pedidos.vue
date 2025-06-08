@@ -52,20 +52,15 @@
                   {{ capitalizarEstado(estado) }}
                 </option>
               </select>
-
-            <button v-if="subpedido.estado === 'pendiente'" @click="cambiarEstado(subpedido.id, 'aceptado')">
-                Aprobar
-              </button>
-               <button v-if="subpedido.estado === 'aceptado'" @click="cambiarEstado(subpedido.id, 'procesado')">
-                Marcar como procesado
-              </button>
-              <button v-if="subpedido.estado === 'procesado'" @click="cambiarEstado(subpedido.id, 'en_camino')">
-                Marcar como En Camino
-              </button>
-              <button v-if="subpedido.estado === 'en_camino'" @click="cambiarEstado(subpedido.id, 'entregado')">
-                Marcar como Entregado
-              </button>
-            
+              <!-- Botón para descargar factura PDF -->
+                  <a
+                    v-if="['aceptado', 'procesado', 'en_camino', 'entregado'].includes(subpedido.estado)"
+                    :href="`http://localhost:8000/api/factura/${subpedido.id}`"
+                    target="_blank"
+                    class="btn-descargar-factura"
+                  >
+                    Descargar factura
+                  </a>
             </div>
           </div>
         </div>
@@ -284,4 +279,19 @@ onMounted(() => {
 .btn-entregado:hover {
   background-color: #71368a;
 }
+
+
+  .btn-descargar-factura {
+    display: inline-block;
+    margin-top: 0.5rem;
+    padding: 0.5rem 1rem;
+    background-color: #2c3e50;
+    color: white;
+    border-radius: 4px;
+    text-decoration: none;
+  }
+
+  .btn-descargar-factura:hover {
+    background-color: #1a252f;
+  }
 </style>

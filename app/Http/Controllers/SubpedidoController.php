@@ -8,6 +8,10 @@ use App\Mail\StockBajoAlert;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\Storage;
+use App\Mail\FacturaPedido;
+
 
 class SubpedidoController extends Controller
 {
@@ -54,11 +58,24 @@ class SubpedidoController extends Controller
             }
 
             $subpedido->estado = $nuevoEstado;
-            $subpedido->save();
+            $subpedido->save();    
 
-            // Si se acepta el subpedido, descontar stock
+                        // Generar factura solo si el estado pasa a "aceptado"
             if ($nuevoEstado === 'aceptado') {
                 $this->procesarDescuentoStock($subpedido);
+
+                // Generar PDF
+                $pedido = $subpedido->pedido;
+                $distribuidor = $subpedido->distribuidor;
+                $pdf = PDF::loadView('facturas.factura', compact('pedido', 'subpedido', 'distribuidor'));
+                $pdfContent = $pdf->output(); // <- Generar el contenido binario aquí
+                // Guardar localmente (opcional)
+                $nombreArchivo = "factura_pedido_{$pedido->id}_sub_{$subpedido->id}.pdf";
+                Storage::put("public/facturas/{$nombreArchivo}", $pdf->output());
+
+                // Enviar por correo al tendero
+                $correoTienda = $pedido->tienda->usuario->correo;
+                Mail::to($correoTienda)->send(new FacturaPedido($pedido, $subpedido, $distribuidor, $pdfContent));
             }
 
             DB::commit();
@@ -115,5 +132,15 @@ class SubpedidoController extends Controller
                 }
             }
         }
+
+ public function descargarFactura(Subpedido $subpedido)
+{
+    $pedido = $subpedido->pedido;
+    $distribuidor = $subpedido->distribuidor;
+
+    $pdf = PDF::loadView('facturas.factura', compact('pedido', 'subpedido', 'distribuidor'));
+    return $pdf->download("factura_pedido_{$pedido->id}_sub_{$subpedido->id}.pdf");
+}
+
 
 }

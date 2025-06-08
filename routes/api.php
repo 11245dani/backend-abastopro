@@ -82,3 +82,4 @@ Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLink
 Route::middleware('auth:sanctum')->get('/pedidos/tienda', [PedidoControllerr::class, 'pedidosTienda']);
 Route::middleware('auth:sanctum')->get('/pedidos/distribuidor', [SubpedidoController::class, 'pedidosDistribuidor']);
 Route::patch('/subpedidos/{id}/estado', [SubpedidoController::class, 'actualizarEstado']);
+Route::get('/factura/{subpedido}', [SubpedidoController::class, 'descargarFactura']);

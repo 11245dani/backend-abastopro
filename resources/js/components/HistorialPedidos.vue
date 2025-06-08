@@ -51,6 +51,17 @@
                       {{ detalle.producto.nombre }} × {{ detalle.cantidad }} – {{ formatearPrecio(detalle.producto.precio) }}
                     </li>
               </ul>
+
+                      <!-- Botón para descargar factura si el subpedido ya fue aceptado o más -->
+        <a
+          v-if="estadoPuedeFacturarse(subpedido.estado)"
+          :href="`http://localhost:8000/api/factura/${subpedido.id}`"
+          target="_blank"
+          class="btn-descargar-factura"
+        >
+          Descargar factura
+        </a>
+
             </div>
                     <p class="total-pedido">
                       <strong>Total:</strong> {{ formatearPrecio(calcularTotalPedido(pedido)) }}
@@ -132,7 +143,29 @@ const formatearInputPrecio = (valor) => {
   return new Intl.NumberFormat('es-CO', { minimumFractionDigits: 0 }).format(valor)
 }
 
+const estadoPuedeFacturarse = (estado) => {
+  const facturables = ['aceptado', 'procesado', 'en_camino', 'entregado'];
+  return facturables.includes((estado || '').toLowerCase());
+};
+
+
 onMounted(() => {
   cargarHistorial()
 })
 </script>
+
+<style scoped>
+.btn-descargar-factura {
+  display: inline-block;
+  margin-top: 10px;
+  padding: 6px 12px;
+  background-color: #007bff;
+  color: white;
+  text-decoration: none;
+  border-radius: 4px;
+}
+.btn-descargar-factura:hover {
+  background-color: #0056b3;
+}
+
+</style>
