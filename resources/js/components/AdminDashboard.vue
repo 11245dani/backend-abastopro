@@ -18,7 +18,6 @@
     <div class="admin-dashboard">
       <!-- Panel Lateral -->
       <div class="admin-panel">
-        
         <ul class="menu">
           <li @click="irADashboard">Dashboard</li>
           <li @click="router.push('/admin/usuarios')">Todos los usuarios</li>
@@ -30,8 +29,6 @@
       <main class="contenido">
         <h1>Bienvenido, {{ nombreUsuario }}</h1>
 
-        <!-- Lista de usuarios -->
-        <!-- Mostrar lista de usuarios si fue solicitada -->
         <div v-if="usuariosCargados">
           <h2>Lista de Usuarios</h2>
           <div v-if="usuarios.length">
@@ -50,7 +47,6 @@
         <div v-if="mostrarFormulario === 'gestion'" class="form-gestion">
           <h2>Gestionar Categorías y Marcas</h2>
 
-          <!-- Categorías -->
           <div class="gestion-seccion">
             <h3>Categorías</h3>
             <div class="form-group">
@@ -63,7 +59,6 @@
             </ul>
           </div>
 
-          <!-- Marcas -->
           <div class="gestion-seccion" style="margin-top: 2rem;">
             <h3>Marcas</h3>
             <div class="form-group">
@@ -101,27 +96,14 @@ const usuariosCargados = ref(false)
 const usuarioData = JSON.parse(localStorage.getItem('usuario')) || {}
 const nombreUsuario = usuarioData.nombre || 'Usuario'
 
-// Funciones de menú
-const toggleMenu = () => {
-  showMenu.value = !showMenu.value
-}
-
-const irAMiPerfil = () => {
-  router.push('/perfil')
-}
-
+const toggleMenu = () => showMenu.value = !showMenu.value
+const irAMiPerfil = () => router.push('/perfil')
 const cerrarSesion = () => {
-  localStorage.removeItem('token')
-  localStorage.removeItem('usuario')
-  localStorage.removeItem('rol')
+  localStorage.clear()
   router.push('/login')
 }
+const irADashboard = () => router.push('/dashboard')
 
-const irADashboard = () => {
-  router.push('/dashboard')
-}
-
-// Gestión de categorías
 const obtenerCategorias = async () => {
   const res = await axios.get('/api/categorias')
   categorias.value = res.data
@@ -136,7 +118,6 @@ const crearCategoria = async () => {
   obtenerCategorias()
 }
 
-// Gestión de marcas
 const obtenerMarcas = async () => {
   const res = await axios.get('/api/marcas')
   marcas.value = res.data
@@ -151,13 +132,10 @@ const crearMarca = async () => {
   obtenerMarcas()
 }
 
-// Gestión de usuarios
 const listarUsuarios = async () => {
   try {
-    const response = await axios.get('http://localhost:8000/api/usuarios', {
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`,
-      },
+    const response = await axios.get('/api/usuarios', {
+      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
     })
     usuarios.value = response.data.usuarios
   } catch (error) {
@@ -175,7 +153,6 @@ onMounted(() => {
 })
 </script>
 
-
 <style scoped>
 .dashboard {
   display: flex;
@@ -187,22 +164,14 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   padding: 15px 20px;
-  background-color: white;
-  color: black;
+  background-color: #ffffff;
+  color: #333;
   align-items: center;
   border-bottom: 1px solid #ccc;
 }
 
-.logo-text {
-  display: flex;
-  align-items: center;
-  font-weight: bold;
-  font-size: 22px;
-}
-
 .logo-text img {
   height: 40px;
-  margin-right: 10px;
 }
 
 .user-menu {
@@ -210,16 +179,16 @@ onMounted(() => {
   cursor: pointer;
 }
 
-.user-menu .icon {
-  width: 30px;
-  height: 30px;
+.icon {
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
 }
 
 .dropdown {
   position: absolute;
   right: 0;
-  top: 40px;
+  top: 45px;
   background: white;
   border: 1px solid #ccc;
   border-radius: 8px;
@@ -253,7 +222,7 @@ onMounted(() => {
 
 .admin-panel {
   width: 220px;
-  background-color: white;
+  background-color: #fff;
   padding: 20px;
   border-right: 1px solid #ddd;
   height: calc(100vh - 70px);
@@ -268,12 +237,14 @@ onMounted(() => {
 }
 
 .menu li {
-  padding: 10px;
+  padding: 12px 16px;
   cursor: pointer;
+  border-radius: 8px;
+  transition: background 0.2s;
 }
 
 .menu li:hover {
-  background-color: #ddd;
+  background-color: #f0f0f0;
 }
 
 .contenido {
@@ -285,4 +256,40 @@ onMounted(() => {
   box-sizing: border-box;
   font-family: Arial, Helvetica, sans-serif;
 }
+
+h1 {
+  margin-bottom: 20px;
+}
+
+h2 {
+  color: #2f4f4f;
+  margin-bottom: 10px;
+}
+
+.form-group {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 1rem;
+}
+
+input {
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  flex: 1;
+}
+
+button.btn-secondary {
+  background-color: #99D7A9;
+  border: none;
+  padding: 8px 12px;
+  color: #fff;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+button.btn-secondary:hover {
+  background-color: #7fc592;
+}
 </style>
+

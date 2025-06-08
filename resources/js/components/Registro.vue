@@ -1,51 +1,53 @@
 <template>
+  <div class="register-page">
 
-  <a href="/" class="back-link">&larr; Volver al inicio</a>
-  <div class="container">
-    
+    <a href="/" class="back-link">&larr; Volver al inicio</a>
+    <div class="container">
+      
 
-    <div class="logo">
-      <img src="@/images/Logo.jpeg" alt="Logo de la empresa" />
-    </div>
-
-    <div class="title">
-      <h2>Crear una cuenta</h2>
-      <p>Selecciona el tipo de cuenta que deseas crear</p>
-    </div>
-
-    <div class="account-type">
-      <button :class="{ active: form.rol === 'tendero' }" @click="setRol('tendero')">Tienda</button>
-      <button :class="{ active: form.rol === 'gestor_despacho' }" @click="setRol('gestor_despacho')">Distribuidor</button>
-    </div>
-
-    <form @submit.prevent="registrarUsuario">
-      <input v-model="form.nombre" type="text" placeholder="Nombre" required />
-      <input v-model="form.correo" type="email" placeholder="Correo electrónico" required />
-      <input v-model="form.password" type="password" placeholder="Contraseña" required />
-      <input v-model="form.telefono" type="text" placeholder="Télefono" required />
-
-
-      <input
-        v-if="form.rol === 'tendero'"
-        v-model="form.direccion"
-        type="text"
-        placeholder="Dirección"
-        required
-      />
-
-      <div v-if="form.rol === 'gestor_despacho'">
-        <input v-model="form.nombre_empresa" type="text" placeholder="Nombre de la Empresa" required />
-        <input v-model="form.direccion" type="text" placeholder="Dirección" required />
-
+      <div class="logo">
+        <img src="@/images/Logo.jpeg" alt="Logo de la empresa" />
       </div>
 
-      <button type="submit" class="submit-btn">Registrarse como {{ form.rol === 'tendero' ? 'Tienda' : 'Distribuidor' }}</button>
+      <div class="title">
+        <h2>Crear una cuenta</h2>
+        <p>Selecciona el tipo de cuenta que deseas crear</p>
+      </div>
 
-      <p v-if="mensaje" :style="{ color: mensajeColor }">{{ mensaje }}</p>
-    </form>
+      <div class="account-type">
+        <button :class="{ active: form.rol === 'tendero' }" @click="setRol('tendero')">Tienda</button>
+        <button :class="{ active: form.rol === 'gestor_despacho' }" @click="setRol('gestor_despacho')">Distribuidor</button>
+      </div>
 
-    <div class="toggle">
-      <p>¿Ya tienes una cuenta? <router-link to="/Login">Iniciar sesión</router-link></p>
+      <form @submit.prevent="registrarUsuario">
+        <input v-model="form.nombre" type="text" placeholder="Nombre" required />
+        <input v-model="form.correo" type="email" placeholder="Correo electrónico" required />
+        <input v-model="form.password" type="password" placeholder="Contraseña" required />
+        <input v-model="form.telefono" type="text" placeholder="Télefono" required />
+
+
+        <input
+          v-if="form.rol === 'tendero'"
+          v-model="form.direccion"
+          type="text"
+          placeholder="Dirección"
+          required
+        />
+
+        <div v-if="form.rol === 'gestor_despacho'">
+          <input v-model="form.nombre_empresa" type="text" placeholder="Nombre de la Empresa" required />
+          <input v-model="form.direccion" type="text" placeholder="Dirección" required />
+
+        </div>
+
+        <button type="submit" class="submit-btn">Registrarse como {{ form.rol === 'tendero' ? 'Tienda' : 'Distribuidor' }}</button>
+
+        <p v-if="mensaje" :style="{ color: mensajeColor }">{{ mensaje }}</p>
+      </form>
+
+      <div class="toggle">
+        <p>¿Ya tienes una cuenta? <router-link to="/Login">Iniciar sesión</router-link></p>
+      </div>
     </div>
   </div>
 </template>
@@ -115,6 +117,16 @@ async function registrarUsuario() {
 </script>
 
 <style scoped>
+
+.register-page {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background-color: #e7ffed;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+}
 body {
   margin: 0;
   font-family: Arial, sans-serif;
@@ -122,13 +134,13 @@ body {
 }
 
 .container {
-  background-color: white;
-  padding: 30px;
-  border-radius: 10px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  width: 100%;
-  max-width: 400px;
-  margin: 2rem auto;
+  background-color: #fff;
+  padding: 30px 40px;
+  border-radius: 15px;
+  box-shadow: 0 0 20px rgba(0,0,0,0.1);
+  width: 360px;
+  text-align: center;
+  position: relative;
 }
 
 .logo {
@@ -190,5 +202,14 @@ input {
   text-align: center;
   margin-top: 20px;
   font-family: Arial, sans-serif;
+}
+
+.back-link {
+  position: absolute;
+  top: 15px;
+  left: 20px;
+  font-size: 13px;
+  color: gray;
+  text-decoration: none;
 }
 </style>

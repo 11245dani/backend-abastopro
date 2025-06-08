@@ -25,11 +25,11 @@ Route::get('/marcas', [MarcaController::class, 'index']);
 Route::post('marcas', [MarcaController::class, 'store']);
 Route::post('categorias', [CategoriaController::class, 'store']);
 
-Route::middleware('auth:sanctum')->put('/pedidos/{id}/estado', [PedidoControllerr::class, 'actualizarEstado']);
+Route::middleware('auth:sanctum')->put('/pedidos/{id}/estado', [PedidoController::class, 'actualizarEstado']);
 
 Route::get('/productos-disponibles', [ProductoController::class, 'listarDisponibles']);
 
-Route::middleware('auth:sanctum')->get('/historial-pedidos', [PedidoControllerr::class, 'historialPedidosTienda']);
+Route::middleware('auth:sanctum')->get('/historial-pedidos', [PedidoController::class, 'historialPedidosTienda']);
 
 // routes/api.php
 Route::middleware('auth:sanctum')->patch('/pedidos/{id}/estado', [PedidoControllerr::class, 'cambiarEstado']);
@@ -46,7 +46,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/carrito/agregar', [CarritoController::class, 'agregar']);
     Route::delete('/carrito/eliminar/{item}', [CarritoController::class, 'eliminar']);
     Route::post('/carrito/confirmar', [CarritoController::class, 'confirmar']);
-    Route::get('/pedidos-distribuidor', [PedidoControllerr::class, 'pedidosDistribuidor']);
+    Route::get('/pedidos-distribuidor', [PedidoController::class, 'pedidosDistribuidor']);
 
 });
 
