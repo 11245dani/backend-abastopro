@@ -1,193 +1,410 @@
 <template>
-
-  <a href="/" class="back-link">&larr; Volver al inicio</a>
-  <div class="container">
+  <div class="register-page">
+    <button class="back-button" @click="$router.push('/')">Volver al inicio</button>
     
-
-    <div class="logo">
-      <img src="@/images/Logo.jpeg" alt="Logo de la empresa" />
-    </div>
-
-    <div class="title">
-      <h2>Crear una cuenta</h2>
-      <p>Selecciona el tipo de cuenta que deseas crear</p>
-    </div>
-
-    <div class="account-type">
-      <button :class="{ active: form.rol === 'tendero' }" @click="setRol('tendero')">Tienda</button>
-      <button :class="{ active: form.rol === 'gestor_despacho' }" @click="setRol('gestor_despacho')">Distribuidor</button>
-    </div>
-
-    <form @submit.prevent="registrarUsuario">
-      <input v-model="form.nombre" type="text" placeholder="Nombre" required />
-      <input v-model="form.correo" type="email" placeholder="Correo electrónico" required />
-      <input v-model="form.password" type="password" placeholder="Contraseña" required />
-      <input v-model="form.telefono" type="text" placeholder="Télefono" required />
-
-
-      <input
-        v-if="form.rol === 'tendero'"
-        v-model="form.direccion"
-        type="text"
-        placeholder="Dirección"
-        required
-      />
-
-      <div v-if="form.rol === 'gestor_despacho'">
-        <input v-model="form.nombre_empresa" type="text" placeholder="Nombre de la Empresa" required />
-        <input v-model="form.direccion" type="text" placeholder="Dirección" required />
-
+    <div class="register-container">
+      <div class="logo-section">
+        <div class="logo-container">
+          <img src="@/images/Logo.jpeg" alt="Logo ABASTOPRO" class="logo-img" />
+        </div>
       </div>
 
-      <button type="submit" class="submit-btn">Registrarse como {{ form.rol === 'tendero' ? 'Tienda' : 'Distribuidor' }}</button>
+      <div class="form-section">
+        <h2>Crear una cuenta</h2>
+        <p class="subtitle">Selecciona el tipo de cuenta que deseas crear</p>
 
-      <p v-if="mensaje" :style="{ color: mensajeColor }">{{ mensaje }}</p>
-    </form>
+        <form @submit.prevent="registrarUsuario">
+          <div class="account-type">
+            <button 
+              type="button"
+              :class="{ active: tipoRegistro === 'tienda' }" 
+              @click="tipoRegistro = 'tienda'"
+            >
+              Tienda
+            </button>
+            <button 
+              type="button"
+              :class="{ active: tipoRegistro === 'distribuidor' }" 
+              @click="tipoRegistro = 'distribuidor'"
+            >
+              Distribuidor
+            </button>
+          </div>
 
-    <div class="toggle">
-      <p>¿Ya tienes una cuenta? <router-link to="/Login">Iniciar sesión</router-link></p>
+          <div class="form-group">
+            <label for="nombre">Nombre</label>
+            <input 
+              type="text" 
+              id="nombre" 
+              v-model="form.nombre" 
+              placeholder="Tu nombre completo" 
+              required 
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="correo">Correo electrónico</label>
+            <input 
+              type="email" 
+              id="correo" 
+              v-model="form.correo" 
+              placeholder="email@ejemplo.com" 
+              required 
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="password">Contraseña</label>
+            <input 
+              type="password" 
+              id="password" 
+              v-model="form.password" 
+              placeholder="Crea una contraseña segura"
+              required 
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="telefono">Teléfono</label>
+            <input 
+              type="text" 
+              id="telefono" 
+              v-model="form.telefono" 
+              placeholder="Número de contacto" 
+              required 
+            />
+          </div>
+
+          <!-- Campos específicos para Tienda -->
+          <div class="form-group" v-if="tipoRegistro === 'tienda'">
+            <label for="direccion">Dirección de la tienda</label>
+            <input 
+              type="text" 
+              id="direccion" 
+              v-model="form.direccion" 
+              placeholder="Dirección de la tienda" 
+              required 
+            />
+          </div>
+
+          <!-- Campos específicos para Distribuidor -->
+          <template v-if="tipoRegistro === 'distribuidor'">
+            <div class="form-group">
+              <label for="nombre_empresa">Nombre de la Empresa</label>
+              <input 
+                type="text" 
+                id="nombre_empresa" 
+                v-model="form.nombre_empresa" 
+                placeholder="Nombre legal de la empresa" 
+                required 
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="direccion_empresa">Dirección de la empresa</label>
+              <input 
+                type="text" 
+                id="direccion_empresa" 
+                v-model="form.direccion_empresa" 
+                placeholder="Dirección de la empresa" 
+                required 
+              />
+            </div>
+          </template>
+
+          <button type="submit" class="submit-btn">
+            Registrarse como {{ tipoRegistro === 'tienda' ? 'Tienda' : 'Distribuidor' }}
+          </button>
+
+          <div v-if="mensaje" class="message" :class="{ error: mensajeColor === 'red' }">
+            {{ mensaje }}
+          </div>
+        </form>
+
+        <div class="bottom-text">
+          ¿Ya tienes una cuenta? <span class="login-link" @click="$router.push('/login')">Iniciar sesión</span>
+        </div>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
 import axios from 'axios'
+
+const route = useRoute()
+const tipoRegistro = ref(route.query.tipo || 'tienda')
 
 const form = ref({
   nombre: '',
   correo: '',
   password: '',
-  rol: 'tendero',
+  telefono: '',
   direccion: '',
   nombre_empresa: '',
-  telefono: ''
+  direccion_empresa: '',
+  tipo: tipoRegistro.value
 })
 
 const mensaje = ref('')
 const mensajeColor = ref('green')
 
-function setRol(rol) {
-  form.value.rol = rol
-}
+onMounted(() => {
+  // Validar que el tipo de registro sea válido
+  if (!['tienda', 'distribuidor'].includes(tipoRegistro.value)) {
+    tipoRegistro.value = 'tienda'
+  }
+})
 
 async function registrarUsuario() {
-  mensaje.value = ''
-
-  const payload = { ...form.value }
-
-  if (payload.rol === 'tendero') {
-    delete payload.nombre_empresa
-  }
-
   try {
-    const res = await axios.post('http://127.0.0.1:8000/api/register', payload, {
-      headers: {
-        Accept: 'application/json'
-      }
-    })
-
-    mensaje.value = '¡Registro exitoso! Verifica tu correo electrónico.'
+    // Configurar el tipo en el formulario
+    form.value.tipo = tipoRegistro.value
+    
+    const response = await axios.post('http://127.0.0.1:8000/api/register', form.value)
+    
+    mensaje.value = 'Registro exitoso!'
     mensajeColor.value = 'green'
-
-    form.value = {
-      nombre: '',
-      correo: '',
-      password: '',
-      rol: 'tendero',
-      direccion: '',
-      nombre_empresa: '',
-      telefono: ''
-    }
+    
+    // Redirigir después de 2 segundos
+    setTimeout(() => {
+      router.push('/login')
+    }, 2000)
+    
   } catch (error) {
-    if (error.response?.data?.errors) {
-      const errores = Object.values(error.response.data.errors).flat().join(', ')
-      mensaje.value = errores
-    } else if (error.response?.data?.mensaje) {
-      mensaje.value = error.response.data.mensaje
-    } else {
-      mensaje.value = 'Error desconocido'
-    }
+    mensaje.value = error.response?.data?.message || 'Error en el registro'
     mensajeColor.value = 'red'
   }
 }
-
 </script>
 
 <style scoped>
-body {
+* {
   margin: 0;
-  font-family: Arial, sans-serif;
-  background-color: #f9f9f9;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Segoe UI', Arial, sans-serif;
 }
 
-.container {
-  background-color: white;
-  padding: 30px;
-  border-radius: 10px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  width: 100%;
-  max-width: 400px;
-  margin: 2rem auto;
-}
-
-.logo {
+.register-page {
+  background-color: #FFFFFF;
+  min-height: 100vh;
   display: flex;
+  align-items: center;
   justify-content: center;
-  margin-bottom: 20px;
+  position: relative;
 }
 
-.logo img {
-  width: 120px;
-  height: auto;
+.back-button {
+  position: absolute;
+  top: 30px;
+  left: 30px;
+  padding: 10px 20px;
+  background-color: #8FBC8F;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
 }
 
-.title {
-  text-align: center;
-  margin-bottom: 20px;
+.back-button:hover {
+  background-color: #7da97d;
+}
+
+.register-container {
+  display: flex;
+  width: 80%;
+  max-width: 1000px;
+  background-color: white;
+  border-radius: 10px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.logo-section {
+  flex: 1;
+  background-color: #8FBC8F;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+}
+
+.logo-container {
+  width: 250px;
+  height: 250px;
+  background-color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.logo-img {
+  width: 200px;
+  height: 200px;
+  object-fit: contain;
+}
+
+.form-section {
+  flex: 1;
+  padding: 50px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+h2 {
+  font-size: 28px;
+  color: #333;
+  margin-bottom: 10px;
+  font-weight: 600;
+}
+
+.subtitle {
+  color: #666;
+  font-size: 15px;
+  margin-bottom: 30px;
 }
 
 .account-type {
   display: flex;
-  justify-content: space-around;
+  gap: 10px;
   margin-bottom: 20px;
 }
 
 .account-type button {
-  padding: 10px;
-  border: none;
+  flex: 1;
+  padding: 12px;
+  border: 1px solid #ddd;
+  background-color: white;
   border-radius: 5px;
   cursor: pointer;
-  background-color: #e0e0e0;
-  font-weight: normal;
+  font-size: 15px;
+  color: #333;
+  transition: all 0.2s;
 }
 
 .account-type button.active {
-  background-color: #fff;
-  font-weight: bold;
-  border: 1px solid #ccc;
+  background-color: #8FBC8F;
+  color: white;
+  border-color: #8FBC8F;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  font-size: 15px;
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 8px;
 }
 
 input {
   width: 100%;
-  padding: 10px;
-  margin: 10px 0;
-  border: 1px solid #ccc;
+  padding: 12px 15px;
+  border: 1px solid #ddd;
   border-radius: 5px;
+  font-size: 15px;
+  transition: border-color 0.2s;
+}
+
+input:focus {
+  outline: none;
+  border-color: #8FBC8F;
 }
 
 .submit-btn {
-  background-color: #000;
+  width: 100%;
+  padding: 14px;
+  background-color: #8FBC8F;
   color: white;
   border: none;
   border-radius: 5px;
-  padding: 10px;
+  font-size: 16px;
+  font-weight: 500;
   cursor: pointer;
-  width: 100%;
+  margin-top: 20px;
+  transition: background-color 0.2s;
 }
 
-.toggle {
+.submit-btn:hover {
+  background-color: #7da97d;
+}
+
+.bottom-text {
+  margin-top: 25px;
+  font-size: 15px;
   text-align: center;
+  color: #666;
+}
+
+.login-link {
+  color: #8FBC8F;
+  text-decoration: underline;
+  cursor: pointer;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.login-link:hover {
+  color: #7da97d;
+}
+
+.message {
   margin-top: 20px;
+  padding: 12px;
+  border-radius: 5px;
+  text-align: center;
+  font-size: 14px;
+  background-color: #e6f7e6;
+  color: #2e7d32;
+}
+
+.message.error {
+  background-color: #ffebee;
+  color: #c62828;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .register-container {
+    flex-direction: column;
+    width: 90%;
+  }
+  
+  .logo-section {
+    padding: 30px;
+  }
+  
+  .logo-container {
+    width: 180px;
+    height: 180px;
+  }
+  
+  .logo-img {
+    width: 150px;
+    height: 150px;
+  }
+  
+  .form-section {
+    padding: 40px;
+  }
+  
+  .back-button {
+    top: 20px;
+    left: 20px;
+    padding: 8px 16px;
+    font-size: 14px;
+  }
 }
 </style>
