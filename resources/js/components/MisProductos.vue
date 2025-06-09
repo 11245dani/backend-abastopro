@@ -12,15 +12,12 @@
     <div class="productos-grid">
       <div v-for="prod in productos" :key="prod.id" class="producto-card">
         <img v-if="prod.imagen_url" :src="prod.imagen_url" class="producto-imagen" />
-
         <h3>{{ prod.nombre }}</h3>
         <p class="categoria">{{ prod.categoria?.nombre }}</p>
-
         <div class="precio-stock">
-          <p class="precio">$ {{ prod.precio }}</p>
+          <p class="precio">{{ formatearPrecio(prod.precio) }}</p>
           <p class="stock">Stock: {{ prod.stock }}</p>
         </div>
-
         <div class="acciones">
           <button class="btn-editar" @click="prepararEdicion(prod)">✏️ Editar</button>
           <button class="btn-eliminar" @click="eliminarProducto(prod.id)">🗑️ Eliminar</button>
@@ -28,52 +25,76 @@
       </div>
     </div>
 
-<!-- Modal flotante -->
-<div v-if="productoEditar" class="modal-overlay">
-  <div class="modal">
-    <h3>Editar Producto</h3>
-    <form @submit.prevent="guardarEdicion">
-      <label>Nombre</label>
-      <input v-model="productoEditar.nombre" placeholder="Nombre" required />
+    <!-- Modal -->
+    <div v-if="productoEditar" class="modal-overlay">
+      <div class="modal">
+        <h3>Editar Producto</h3>
+        <form @submit.prevent="guardarEdicion" class="formulario-modal">
+          <div class="campo">
+            <label>Nombre</label>
+            <input v-model="productoEditar.nombre" required />
+          </div>
 
-      <label>Descripción</label>
-      <textarea v-model="productoEditar.descripcion" placeholder="Descripción"></textarea>
+          <div class="campo">
+            <label>Descripción</label>
+            <textarea v-model="productoEditar.descripcion" rows="2"></textarea>
+          </div>
 
-      <label>Precio</label>
-      <input type="number" v-model.number="productoEditar.precio" min="0" placeholder="Precio" required />
+          <div class="campo">
+            <label>Precio</label>
+            <input
+              type="text"
+              :value="formatearInputPrecio(productoEditar.precio)"
+              @input="actualizarPrecio($event.target.value)"
+              placeholder="Precio"
+              required
+            />
+          </div>
 
-      <label>Stock</label>
-      <input type="number" v-model.number="productoEditar.stock" min="0" placeholder="Stock" required />
+          <div class="campo">
+            <label>Stock</label>
+            <input type="number" v-model.number="productoEditar.stock" min="0" required />
+          </div>
 
-      <label>URL de imagen</label>
-      <input v-model="productoEditar.imagen_url" placeholder="URL de imagen" />
+          <div class="campo">
+            <label>Imagen actual</label>
+            <div v-if="productoEditar.imagen_url">
+              <img :src="productoEditar.imagen_url" class="imagen-preview" />
+              <button type="button" @click="productoEditar.eliminar_imagen = true; productoEditar.imagen_url = null">
+                ❌ Eliminar imagen
+              </button>
+            </div>
+          </div>
 
-      <div class="modal-botones">
-        <button type="submit" class="btn-guardar">Guardar</button>
-        <button type="button" class="btn-cancelar" @click="productoEditar = null">Cancelar</button>
+          <div class="campo">
+            <label>Nueva imagen</label>
+            <input type="file" @change="handleImagenSeleccionada" />
+          </div>
+
+          <div class="modal-botones">
+            <button type="submit" class="btn-guardar">Guardar</button>
+            <button type="button" class="btn-cancelar" @click="productoEditar = null">Cancelar</button>
+          </div>
+        </form>
       </div>
-    </form>
-  </div>
-</div>
-
+    </div>
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
 import axios from 'axios'
+import { useRouter } from 'vue-router'
 
 const router = useRouter()
 const productos = ref([])
 const productoEditar = ref(null)
+const imagenNueva = ref(null)
 
 const obtenerProductos = async () => {
   try {
     const res = await axios.get('/api/productos', {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('token')}`
-      }
+      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
     })
     productos.value = res.data
   } catch (error) {
@@ -85,9 +106,7 @@ const eliminarProducto = async (id) => {
   if (confirm('¿Estás seguro de eliminar este producto?')) {
     try {
       await axios.delete(`/api/productos/${id}`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`
-        }
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
       })
       productos.value = productos.value.filter(p => p.id !== id)
     } catch (error) {
@@ -97,19 +116,41 @@ const eliminarProducto = async (id) => {
 }
 
 const prepararEdicion = (producto) => {
-  productoEditar.value = { ...producto }
+  productoEditar.value = { ...producto, eliminar_imagen: false }
+}
+
+const handleImagenSeleccionada = (e) => {
+  imagenNueva.value = e.target.files[0]
 }
 
 const guardarEdicion = async () => {
   try {
-    const { id, ...data } = productoEditar.value
-    await axios.put(`/api/productos/${id}`, data, {
+    const formData = new FormData()
+    formData.append('nombre', productoEditar.value.nombre)
+    formData.append('descripcion', productoEditar.value.descripcion || '')
+    formData.append('precio', productoEditar.value.precio)
+    formData.append('stock', productoEditar.value.stock)
+    formData.append('categoria_id', productoEditar.value.categoria_id)
+    formData.append('marca_id', productoEditar.value.marca_id)
+
+    if (imagenNueva.value) {
+      formData.append('imagen', imagenNueva.value)
+    }
+
+    if (productoEditar.value.eliminar_imagen) {
+      formData.append('eliminar_imagen', '1')
+    }
+
+    await axios.post(`/api/productos/${productoEditar.value.id}?_method=PUT`, formData, {
       headers: {
-        Authorization: `Bearer ${localStorage.getItem('token')}`
+        Authorization: `Bearer ${localStorage.getItem('token')}`,
+        'Content-Type': 'multipart/form-data',
       }
     })
+
     await obtenerProductos()
     productoEditar.value = null
+    imagenNueva.value = null
   } catch (error) {
     alert('Error al guardar cambios')
   }
@@ -119,10 +160,32 @@ const añadirProducto = () => {
   router.push('/CrearProducto')
 }
 
-onMounted(() => {
-  obtenerProductos()
-})
+const formatearPrecio = (valor) => {
+  if (valor == null) return ''
+  return new Intl.NumberFormat('es-CO', {
+    style: 'currency',
+    currency: 'COP',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
+  }).format(valor)
+}
+
+// 👉 Para mostrar en input con puntos como 5.000
+const formatearInputPrecio = (valor) => {
+  if (valor == null || isNaN(valor)) return ''
+  return new Intl.NumberFormat('es-CO', { minimumFractionDigits: 0 }).format(valor)
+}
+
+// 👉 Para actualizar el precio interno al número limpio
+const actualizarPrecio = (valorFormateado) => {
+  const soloNumeros = valorFormateado.replace(/\./g, '').replace(/\D/g, '')
+  productoEditar.value.precio = parseInt(soloNumeros) || 0
+}
+
+onMounted(obtenerProductos)
 </script>
+
+
 
 <style scoped>
 .mis-productos {
@@ -235,64 +298,131 @@ h3 {
 .btn-anadir:hover {
   background-color: #333;
 }
+.imagen-preview {
+  max-width: 80px;
+  max-height: 80px;
+  object-fit: cover;
+  border-radius: 6px;
+  margin-bottom: 10px;
+  border: 1px solid #ddd;
+}
 
-/* MODAL flotante */
+
 .modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.4);
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.4); /* fondo oscuro translúcido */
   display: flex;
-  justify-content: center;
   align-items: center;
-  z-index: 999;
+  justify-content: center;
+  z-index: 1000; /* por encima del contenido */
 }
 
+
+/* Mejora visual del modal */
 .modal {
-  background: #fff;
-  border-radius: 12px;
-  padding: 25px;
-  width: 400px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  background: linear-gradient(to bottom right, #ffffff, #f7f7f7);
+  border-radius: 16px;
+  padding: 30px;
+  width: 420px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  animation: slideIn 0.3s ease-out;
 }
 
-.modal form {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+.modal h3 {
+  font-size: 1.4rem;
+  margin-bottom: 15px;
+  color: #333;
 }
 
 .modal input,
 .modal textarea {
-  padding: 8px;
-  border-radius: 6px;
+  padding: 10px;
+  border-radius: 8px;
   border: 1px solid #ccc;
   font-size: 14px;
+  background-color: #fafafa;
+  transition: border-color 0.2s;
+}
+
+.modal input:focus,
+.modal textarea:focus {
+  outline: none;
+  border-color: #4caf50;
+}
+
+.modal label {
+  font-weight: 600;
+  font-size: 13px;
+  margin-top: 8px;
+  color: #555;
 }
 
 .modal-botones {
   display: flex;
   justify-content: flex-end;
-  gap: 10px;
+  gap: 12px;
+  margin-top: 10px;
 }
 
 .btn-guardar {
-  background-color: #28a745;
+  background-color: #4caf50;
   color: white;
-  padding: 8px 14px;
+  padding: 10px 16px;
   border: none;
-  border-radius: 6px;
+  border-radius: 8px;
+  font-weight: 600;
   cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.btn-guardar:hover {
+  background-color: #43a047;
 }
 
 .btn-cancelar {
-  background-color: #ccc;
-  color: black;
-  padding: 8px 14px;
+  background-color: #e0e0e0;
+  color: #333;
+  padding: 10px 16px;
   border: none;
-  border-radius: 6px;
+  border-radius: 8px;
+  font-weight: 600;
   cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.btn-cancelar:hover {
+  background-color: #bdbdbd;
+}
+
+.formulario-modal .campo {
+  margin-bottom: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.formulario-modal input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+.formulario-modal input::-webkit-outer-spin-button,
+.formulario-modal input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 </style>

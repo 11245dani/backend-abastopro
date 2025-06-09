@@ -2,8 +2,7 @@
   <div class="dashboard">
     <header class="header">
       <div class="logo-text">
-        <img src="@/images/Logo.jpeg" alt="Logo AbastoPro" />
-        AbastoPro
+        <img src="@/images/logoname.png" alt="Logo AbastoPro" />
       </div>
       <div class="user-menu" @click="toggleMenu">
         <img src="@/images/user-icon.png" alt="Perfil" class="icon" />
@@ -19,15 +18,10 @@
     <div class="admin-dashboard">
       <!-- Panel Lateral -->
       <div class="admin-panel">
-        <div class="logo-text">
-          <img src="@/images/Logo.jpeg" alt="Logo AbastoPro" />
-          AbastoPro
-        </div>
         <ul class="menu">
           <li @click="irADashboard">Dashboard</li>
           <li @click="router.push('/admin/usuarios')">Todos los usuarios</li>
-          <li>Tiendas</li>
-          <li>Distribuidores</li>
+          <li @click="mostrarFormulario = 'gestion'">Gestionar Categorías y Marcas</li>
         </ul>
       </div>
 
@@ -35,7 +29,6 @@
       <main class="contenido">
         <h1>Bienvenido, {{ nombreUsuario }}</h1>
 
-        <!-- Mostrar lista de usuarios si fue solicitada -->
         <div v-if="usuariosCargados">
           <h2>Lista de Usuarios</h2>
           <div v-if="usuarios.length">
@@ -49,62 +42,115 @@
             <p>No hay usuarios disponibles.</p>
           </div>
         </div>
+
+        <!-- Gestión de categorías y marcas -->
+        <div v-if="mostrarFormulario === 'gestion'" class="form-gestion">
+          <h2>Gestionar Categorías y Marcas</h2>
+
+          <div class="gestion-seccion">
+            <h3>Categorías</h3>
+            <div class="form-group">
+              <label>Nueva Categoría</label>
+              <input v-model="nuevaCategoria" placeholder="Ej: Lácteos" />
+              <button @click="crearCategoria" class="btn-secondary">Crear</button>
+            </div>
+            <ul>
+              <li v-for="cat in categorias" :key="cat.id">{{ cat.nombre }}</li>
+            </ul>
+          </div>
+
+          <div class="gestion-seccion" style="margin-top: 2rem;">
+            <h3>Marcas</h3>
+            <div class="form-group">
+              <label>Nueva Marca</label>
+              <input v-model="nuevaMarca" placeholder="Ej: Alpina" />
+              <button @click="crearMarca" class="btn-secondary">Crear</button>
+            </div>
+            <ul>
+              <li v-for="marca in marcas" :key="marca.id">{{ marca.nombre }}</li>
+            </ul>
+          </div>
+        </div>
       </main>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue';
-import { useRouter } from 'vue-router';
-import axios from 'axios';
+import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import axios from 'axios'
 
-const showMenu = ref(false);
-const router = useRouter();
+const router = useRouter()
+const mostrarFormulario = ref(null)
+const showMenu = ref(false)
 
-const usuarios = ref([]);
-const usuariosCargados = ref(false); // ✅ Nueva bandera para mostrar contenido solo tras intento de carga
+const nuevaCategoria = ref('')
+const nuevaMarca = ref('')
+const categorias = ref([])
+const marcas = ref([])
 
-// Recuperar datos del usuario
-const usuarioData = JSON.parse(localStorage.getItem('usuario')) || {};
-const nombreUsuario = usuarioData.nombre || 'Usuario';
+const usuarios = ref([])
+const usuariosCargados = ref(false)
 
-// Funciones
-const toggleMenu = () => {
-  showMenu.value = !showMenu.value;
-};
+const usuarioData = JSON.parse(localStorage.getItem('usuario')) || {}
+const nombreUsuario = usuarioData.nombre || 'Usuario'
 
-const irAMiPerfil = () => {
-  router.push('/perfil');
-};
-
+const toggleMenu = () => showMenu.value = !showMenu.value
+const irAMiPerfil = () => router.push('/perfil')
 const cerrarSesion = () => {
-  localStorage.removeItem('token');
-  localStorage.removeItem('usuario');
-  localStorage.removeItem('rol');
-  router.push('/login');
-};
+  localStorage.clear()
+  router.push('/login')
+}
+const irADashboard = () => router.push('/dashboard')
 
-const irADashboard = () => {
-  router.push('/dashboard');
-};
+const obtenerCategorias = async () => {
+  const res = await axios.get('/api/categorias')
+  categorias.value = res.data
+}
+
+const crearCategoria = async () => {
+  if (!nuevaCategoria.value.trim()) return
+  await axios.post('/api/categorias', { nombre: nuevaCategoria.value }, {
+    headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+  })
+  nuevaCategoria.value = ''
+  obtenerCategorias()
+}
+
+const obtenerMarcas = async () => {
+  const res = await axios.get('/api/marcas')
+  marcas.value = res.data
+}
+
+const crearMarca = async () => {
+  if (!nuevaMarca.value.trim()) return
+  await axios.post('/api/marcas', { nombre: nuevaMarca.value }, {
+    headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+  })
+  nuevaMarca.value = ''
+  obtenerMarcas()
+}
 
 const listarUsuarios = async () => {
   try {
-    const response = await axios.get('http://localhost:8000/api/usuarios', {
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`,
-      },
-    });
-    usuarios.value = response.data.usuarios;
+    const response = await axios.get('/api/usuarios', {
+      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+    })
+    usuarios.value = response.data.usuarios
   } catch (error) {
-    console.error(error);
-    alert('Error al obtener usuarios: ' + (error.response?.data?.mensaje || 'Error desconocido'));
-    usuarios.value = []; // Para que muestre "no hay usuarios"
+    console.error(error)
+    alert('Error al obtener usuarios: ' + (error.response?.data?.mensaje || 'Error desconocido'))
+    usuarios.value = []
   } finally {
-    usuariosCargados.value = true; // ✅ Siempre se activa después de intentar cargar
+    usuariosCargados.value = true
   }
-};
+}
+
+onMounted(() => {
+  obtenerCategorias()
+  obtenerMarcas()
+})
 </script>
 
 <style scoped>
@@ -118,22 +164,14 @@ const listarUsuarios = async () => {
   display: flex;
   justify-content: space-between;
   padding: 15px 20px;
-  background-color: white;
-  color: black;
+  background-color: #ffffff;
+  color: #333;
   align-items: center;
   border-bottom: 1px solid #ccc;
 }
 
-.logo-text {
-  display: flex;
-  align-items: center;
-  font-weight: bold;
-  font-size: 22px;
-}
-
 .logo-text img {
   height: 40px;
-  margin-right: 10px;
 }
 
 .user-menu {
@@ -141,16 +179,16 @@ const listarUsuarios = async () => {
   cursor: pointer;
 }
 
-.user-menu .icon {
-  width: 30px;
-  height: 30px;
+.icon {
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
 }
 
 .dropdown {
   position: absolute;
   right: 0;
-  top: 40px;
+  top: 45px;
   background: white;
   border: 1px solid #ccc;
   border-radius: 8px;
@@ -163,6 +201,7 @@ const listarUsuarios = async () => {
   list-style: none;
   margin: 0;
   padding: 0;
+  font-family: Arial, Helvetica, sans-serif;
 }
 
 .dropdown li {
@@ -172,7 +211,7 @@ const listarUsuarios = async () => {
 }
 
 .dropdown li:hover {
-  background-color: #f0f0f0;
+  background-color: #99D7A9;
 }
 
 .admin-dashboard {
@@ -183,7 +222,7 @@ const listarUsuarios = async () => {
 
 .admin-panel {
   width: 220px;
-  background-color: white;
+  background-color: #fff;
   padding: 20px;
   border-right: 1px solid #ddd;
   height: calc(100vh - 70px);
@@ -194,15 +233,18 @@ const listarUsuarios = async () => {
   list-style: none;
   padding: 0;
   margin-top: 20px;
+  font-family: Arial, Helvetica, sans-serif;
 }
 
 .menu li {
-  padding: 10px;
+  padding: 12px 16px;
   cursor: pointer;
+  border-radius: 8px;
+  transition: background 0.2s;
 }
 
 .menu li:hover {
-  background-color: #ddd;
+  background-color: #f0f0f0;
 }
 
 .contenido {
@@ -212,5 +254,42 @@ const listarUsuarios = async () => {
   height: calc(100vh - 70px);
   overflow-y: auto;
   box-sizing: border-box;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+h1 {
+  margin-bottom: 20px;
+}
+
+h2 {
+  color: #2f4f4f;
+  margin-bottom: 10px;
+}
+
+.form-group {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 1rem;
+}
+
+input {
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  flex: 1;
+}
+
+button.btn-secondary {
+  background-color: #99D7A9;
+  border: none;
+  padding: 8px 12px;
+  color: #fff;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+button.btn-secondary:hover {
+  background-color: #7fc592;
 }
 </style>
+

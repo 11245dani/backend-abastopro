@@ -254,10 +254,11 @@ public function listarUsuarios(Request $request)
         return response()->json(['mensaje' => 'Acceso no autorizado'], 403);
     }
 
-    $query = Usuario::query()
+    // Incluir la relación 'distribuidor' en la consulta
+    $query = Usuario::with('distribuidor')
         ->where('id', '!=', $usuario->id); // Excluir al admin autenticado
 
-    //  Búsqueda por nombre o correo
+    // Búsqueda por nombre o correo
     if ($request->filled('buscar')) {
         $buscar = $request->input('buscar');
         $query->where(function ($q) use ($buscar) {
@@ -266,7 +267,7 @@ public function listarUsuarios(Request $request)
         });
     }
 
-    //  Filtro por rol
+    // Filtro por rol
     if ($request->filled('rol')) {
         $rol = $request->input('rol');
         if (in_array($rol, ['tendero', 'gestor_despacho'])) {
@@ -284,6 +285,7 @@ public function listarUsuarios(Request $request)
 
     return response()->json(['usuarios' => $usuarios], 200);
 }
+
 
 
 

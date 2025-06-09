@@ -23,6 +23,14 @@
         <option value="pendiente">Pendiente</option>
         <option value="rechazado">Rechazado</option>
       </select>
+
+      <select v-model="filtroAutorizacion">
+        <option value="">Todas las autorizaciones</option>
+        <option value="aprobado">Aprobado</option>
+        <option value="pendiente">Pendiente</option>
+        <option value="rechazado">Rechazado</option>
+        <option value="No aplica">No aplica</option>
+      </select>
     </div>
 
     <!-- Tabla de usuarios -->
@@ -32,6 +40,7 @@
           <th>Usuario</th>
           <th>Tipo</th>
           <th>Estado</th>
+          <th>Autorización distribución</th> 
           <th>Fecha de Registro</th>
           <th>Contacto</th>
           <th>Acciones</th>
@@ -42,11 +51,24 @@
           <td>{{ usuario.nombre }}</td>
           <td>{{ mostrarRol(usuario.rol) }}</td>
           <td>{{ usuario.estado }}</td>
+          <td>
+            <span
+              :class="{
+                'badge badge-aprobado': usuario.distribuidor?.estado_autorizacion === 'aprobado',
+                'badge badge-pendiente': usuario.distribuidor?.estado_autorizacion === 'pendiente',
+                'badge badge-rechazado': usuario.distribuidor?.estado_autorizacion === 'rechazado',
+                'badge badge-desconocido': !usuario.distribuidor?.estado_autorizacion
+              }"
+            >
+              {{ usuario.distribuidor?.estado_autorizacion || 'No aplica' }}
+            </span>
+          </td>
           <td>{{ formatearFecha(usuario.created_at) }}</td>
           <td>{{ usuario.correo }}<br />{{ usuario.telefono || 'No disponible' }}</td>
           <td>
-            <div v-if="usuario.rol === 'gestor_despacho' && usuario.estado_autorizacion !== 'aprobado'">
+            <div v-if="usuario.rol === 'gestor_despacho' && usuario.distribuidor?.estado_autorizacion !== 'aprobado'">
               <button @click="aprobarGestor(usuario)">Aprobar</button>
+              <button @click="rechazarGestor(usuario)" class="rechazar">Rechazar</button>
             </div>
             <div v-else>
               <button @click="verUsuario(usuario)">Ver</button>
@@ -54,13 +76,12 @@
           </td>
         </tr>
         <tr v-if="usuariosFiltrados.length === 0">
-          <td colspan="6">No hay usuarios que coincidan con los criterios.</td>
+          <td colspan="7">No hay usuarios que coincidan con los criterios.</td>
         </tr>
       </tbody>
     </table>
   </div>
 </template>
-
 
 <script setup>
 import { ref, computed, onMounted } from 'vue';
@@ -72,10 +93,11 @@ const usuarios = ref([]);
 const busqueda = ref('');
 const filtroRol = ref('');
 const filtroEstado = ref('');
+const filtroAutorizacion = ref('');
 
 onMounted(async () => {
   try {
-    const response = await axios.get('http://localhost:8000/api/usuarios', {
+    const response = await axios.get('/api/usuarios', {
       headers: {
         Authorization: `Bearer ${localStorage.getItem('token')}`,
       },
@@ -96,7 +118,12 @@ const usuariosFiltrados = computed(() => {
     const coincideRol = filtroRol.value ? usuario.rol === filtroRol.value : true;
     const coincideEstado = filtroEstado.value ? usuario.estado === filtroEstado.value : true;
 
-    return coincideBusqueda && coincideRol && coincideEstado;
+    const estadoAutorizacion = usuario.distribuidor?.estado_autorizacion || 'No aplica';
+    const coincideAutorizacion = filtroAutorizacion.value
+      ? estadoAutorizacion === filtroAutorizacion.value
+      : true;
+
+    return coincideBusqueda && coincideRol && coincideEstado && coincideAutorizacion;
   });
 });
 
@@ -118,24 +145,19 @@ const verUsuario = (usuario) => {
 
 const aprobarGestor = async (usuario) => {
   const token = localStorage.getItem('token');
-
   if (!confirm(`¿Estás seguro de aprobar a ${usuario.nombre}?`)) return;
 
-
   try {
-    const response = await axios.put(
-      `/api/admin/aprobar-gestor-despacho/${usuario.id}`,
-      {},
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          Accept: 'application/json',
-        },
-      }
-    );
+    await axios.put(`/api/admin/aprobar-gestor-despacho/${usuario.id}`, {}, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: 'application/json',
+      },
+    });
 
-    // Actualizar el estado en la tabla
-    usuario.estado_autorizacion = 'aprobado';
+    if (usuario.distribuidor) {
+      usuario.distribuidor.estado_autorizacion = 'aprobado';
+    }
 
     alert('Gestor de despacho aprobado exitosamente');
   } catch (error) {
@@ -144,52 +166,140 @@ const aprobarGestor = async (usuario) => {
   }
 };
 
+const rechazarGestor = async (usuario) => {
+  const token = localStorage.getItem('token');
+  if (!confirm(`¿Estás seguro de rechazar a ${usuario.nombre}?`)) return;
+
+  try {
+    await axios.put(`/api/admin/rechazar-gestor-despacho/${usuario.id}`, {}, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: 'application/json',
+      },
+    });
+
+    if (usuario.distribuidor) {
+      usuario.distribuidor.estado_autorizacion = 'rechazado';
+    }
+
+    alert('Gestor de despacho rechazado exitosamente');
+  } catch (error) {
+    console.error(error);
+    alert('Error al rechazar al gestor de despacho');
+  }
+};
 </script>
 
 <style scoped>
 .listar-usuarios {
-  padding: 20px;
+  padding: 24px;
+  background-color: #f9f9f9;
+  border-radius: 10px;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+h2 {
+  color: #333;
+  margin-bottom: 16px;
 }
 
 .filtros {
   display: flex;
+  flex-wrap: wrap;
   gap: 10px;
-  margin-bottom: 15px;
+  margin-bottom: 20px;
 }
 
 .filtros input,
 .filtros select {
-  padding: 8px;
-  border-radius: 5px;
+  padding: 8px 10px;
+  border-radius: 6px;
   border: 1px solid #ccc;
+  background-color: #fff;
+  font-size: 14px;
+  transition: border-color 0.3s ease;
+}
+
+
+.filtros input:focus,
+.filtros select:focus {
+  outline: none;
+  border-color: #99D7A9;
 }
 
 table {
   width: 100%;
   border-collapse: collapse;
-  background-color: white;
+  background-color: #fff;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
 }
 
 th, td {
-  padding: 12px;
-  border: 1px solid #ddd;
+  padding: 12px 16px;
+  border-bottom: 1px solid #eee;
   text-align: left;
 }
 
 th {
-  background-color: #f3f3f3;
+  background-color: #e9f5ec;
+  color: #333;
+  font-weight: 600;
 }
 
 button {
-  padding: 6px 10px;
-  background-color: #1976d2;
-  color: white;
+  padding: 6px 12px;
+  background-color: #99D7A9;
+  color: #fff;
   border: none;
   border-radius: 5px;
+  font-size: 14px;
   cursor: pointer;
+  transition: background-color 0.2s;
 }
 
 button:hover {
-  background-color: #1565c0;
+  background-color: #85c395;
+}
+
+button.rechazar {
+  background-color: #d32f2f;
+}
+
+button.rechazar:hover {
+  background-color: #b71c1c;
+}
+
+.badge {
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #fff;
+  display: inline-block;
+  text-transform: capitalize;
+}
+
+.badge-aprobado {
+  background-color: #99D7A9;
+}
+
+.badge-pendiente {
+  background-color: #fbc02d;
+}
+
+.badge-rechazado {
+  background-color: #f44336;
+}
+
+.badge-desconocido {
+  background-color: #9e9e9e;
+}
+
+table td[colspan="7"] {
+  text-align: center;
+  color: #777;
+  padding: 20px;
 }
 </style>

@@ -10,6 +10,7 @@ use App\Models\Distribuidor;
 use App\Models\Usuario;
 use Illuminate\Support\Facades\DB;
 use App\Notifications\GestorDespachoAprobado;
+use App\Notifications\GestorRechazadoNotification;
 
 class AdminController extends Controller
 {
@@ -117,5 +118,21 @@ public function aprobarGestorDespacho($usuario_id)
     return response()->json(['mensaje' => 'Gestor de despacho aprobado exitosamente']);
 }
 
+public function rechazarGestorDespacho($id)
+{
+    $usuario = Usuario::findOrFail($id);
+
+    // Asegúrate de que el usuario tiene relación con distribuidor
+    if ($usuario->rol !== 'gestor_despacho' || !$usuario->distribuidor) {
+        return response()->json(['error' => 'Este usuario no es un gestor de despacho válido.'], 400);
+    }
+
+    $usuario->distribuidor->estado_autorizacion = 'rechazado';
+    $usuario->distribuidor->save();
+        //Envia el correo de rechazo
+      $usuario->notify(new GestorRechazadoNotification());
+
+    return response()->json(['message' => 'Gestor de despacho rechazado correctamente.']);
+}
 
 }

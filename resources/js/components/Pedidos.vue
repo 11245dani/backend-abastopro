@@ -1,3 +1,4 @@
+
 <template>
   <div class="pedidos-container">
     <h2>Pedidos Recibidos</h2>
@@ -7,32 +8,59 @@
     <div v-else-if="pedidos.length === 0" class="no-pedidos">No hay pedidos disponibles.</div>
 
     <ul v-else class="pedidos-list">
-      <li
-        v-for="pedido in pedidos"
-        :key="pedido.id"
-        class="pedido-item"
-      >
-        <div v-if="pedido.pedido">
+      <li v-for="subpedido in pedidos" :key="subpedido.id" class="pedido-item">
+        <div v-if="subpedido.pedido">
           <div class="pedido-header">
-            <span class="pedido-id">Pedido ID: {{ pedido.pedido.id }}</span>
-            <span class="pedido-cantidad">Cantidad: {{ pedido.cantidad }}</span>
+            <span class="pedido-id">Pedido ID: {{ subpedido.pedido.id }}</span>
+            <span class="pedido-estado">Estado actual: {{ capitalizarEstado(subpedido.estado) }}</span>
           </div>
-          <div class="pedido-body">
-            <p><strong>Tienda:</strong> {{ pedido.pedido.tienda?.usuario?.nombre || 'N/A' }}</p>
-            <p><strong>Producto:</strong> {{ pedido.producto?.nombre || 'N/A' }}</p>
-            <p><strong>Estado:</strong> {{ pedido.pedido.estado }}</p>
 
-            <!-- Botones condicionales según el estado -->
+          <div class="pedido-body">
+            <p><strong>Tienda:</strong> {{ subpedido.pedido.tienda?.usuario?.nombre || 'N/A' }}</p>
+
+            <div v-if="subpedido.detalles.length > 0">
+              <p><strong>Productos:</strong></p>
+              <ul class="productos-list">
+                <li v-for="detalle in subpedido.detalles" :key="detalle.id" class="producto-item">
+                  <div class="producto-info">
+                    <img
+                      v-if="detalle.producto?.imagen"
+                      :src="getImagenUrl(detalle.producto.imagen)"
+                      alt="Imagen del producto"
+                      class="producto-imagen"
+                    />
+                    <div class="producto-detalles">
+                      {{ detalle.producto?.nombre }} (x{{ detalle.cantidad }}) - {{ formatearPrecio(detalle.precio_unitario) }}
+                    </div>
+                  </div>
+                </li>
+              </ul>
+            </div>
+
             <div class="acciones-pedido">
-              <button v-if="pedido.pedido.estado === 'pendiente'" @click="cambiarEstado(pedido.pedido.id, 'aceptado')">
-                Aceptar
-              </button>
-              <button v-if="pedido.pedido.estado === 'aceptado'" @click="cambiarEstado(pedido.pedido.id, 'en_camino')">
-                Marcar como En Camino
-              </button>
-              <button v-if="pedido.pedido.estado === 'en_camino'" @click="cambiarEstado(pedido.pedido.id, 'entregado')">
-                Marcar como Entregado
-              </button>
+              <label v-if="transicionesEstado[subpedido.estado]" for="estado-select">Cambiar estado:</label>
+              <select
+                v-if="transicionesEstado[subpedido.estado]"
+                @change="cambiarEstado(subpedido.id, $event.target.value)"
+              >
+                <option disabled selected value="">Seleccione estado</option>
+                <option
+                  v-for="estado in transicionesEstado[subpedido.estado]"
+                  :key="estado"
+                  :value="estado"
+                >
+                  {{ capitalizarEstado(estado) }}
+                </option>
+              </select>
+              <!-- Botón para descargar factura PDF -->
+                  <a
+                    v-if="['aceptado', 'procesado', 'en_camino', 'entregado'].includes(subpedido.estado)"
+                    :href="`http://localhost:8000/api/factura/${subpedido.id}`"
+                    target="_blank"
+                    class="btn-descargar-factura"
+                  >
+                    Descargar factura
+                  </a>
             </div>
           </div>
         </div>
@@ -52,12 +80,38 @@ const pedidos = ref([]);
 const loading = ref(false);
 const error = ref(null);
 
+// Transiciones válidas según estado actual (coinciden con los valores del ENUM)
+const transicionesEstado = {
+  pendiente: ['aceptado', 'rechazado'],
+  aceptado: ['en_camino'],
+  en_camino: ['entregado']
+};
+
+const getImagenUrl = (imagenPath) => {
+  if (!imagenPath) return '';
+  return imagenPath.startsWith('http') ? imagenPath : `http://localhost:8000/storage/${imagenPath}`;
+};
+
+const formatearPrecio = (valor) => {
+  if (valor == null || isNaN(valor)) return ''
+  return new Intl.NumberFormat('es-CO', {
+    style: 'currency',
+    currency: 'COP',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
+  }).format(valor)
+};
+
+const capitalizarEstado = (estado) => {
+  return estado.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
+};
+
 const fetchPedidos = async () => {
   loading.value = true;
   error.value = null;
   try {
     const token = localStorage.getItem('token');
-    const response = await axios.get('http://localhost:8000/api/pedidos-distribuidor', {
+    const response = await axios.get('http://localhost:8000/api/pedidos/distribuidor', {
       headers: {
         Authorization: `Bearer ${token}`
       }
@@ -71,10 +125,11 @@ const fetchPedidos = async () => {
   }
 };
 
-const cambiarEstado = async (pedidoId, nuevoEstado) => {
+const cambiarEstado = async (subpedidoId, nuevoEstado) => {
+  if (!nuevoEstado) return;
   try {
     const token = localStorage.getItem('token');
-    await axios.patch(`http://localhost:8000/api/pedidos/${pedidoId}/estado`, {
+    await axios.patch(`http://localhost:8000/api/subpedidos/${subpedidoId}/estado`, {
       estado: nuevoEstado
     }, {
       headers: {
@@ -82,10 +137,10 @@ const cambiarEstado = async (pedidoId, nuevoEstado) => {
       }
     });
 
-    await fetchPedidos(); // Recargar la lista tras el cambio
+    await fetchPedidos(); // Refresca los pedidos tras actualizar
   } catch (err) {
     console.error('Error al cambiar estado:', err.response?.data || err.message);
-    alert('No se pudo cambiar el estado del pedido.');
+    alert('No se pudo cambiar el estado del subpedido: ' + (err.response?.data?.error || err.message));
   }
 };
 
@@ -96,106 +151,147 @@ onMounted(() => {
 
 <style scoped>
 .pedidos-container {
-  max-width: 700px;
-  margin: 30px auto;
-  padding: 25px 30px;
-  background-color: #111;
-  color: #eee;
-  border-radius: 12px;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.6);
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-}
-
-.pedidos-container h2 {
-  margin-bottom: 25px;
-  font-weight: 700;
-  font-size: 28px;
-  border-bottom: 2px solid #444;
-  padding-bottom: 10px;
-  color: #f0f0f0;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: 'Segoe UI', sans-serif;
 }
 
 .loading,
 .error,
 .no-pedidos {
   text-align: center;
-  font-size: 16px;
-  padding: 15px 0;
-}
-
-.error {
-  color: #ff4c4c;
-}
-
-.pedidos-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
+  margin: 20px 0;
+  font-weight: bold;
 }
 
 .pedido-item {
-  background-color: #222;
-  margin-bottom: 15px;
-  padding: 20px 25px;
-  border-radius: 10px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
-  cursor: default;
+  border: 1px solid #ccc;
+  border-radius: 12px;
+  margin-bottom: 20px;
+  padding: 15px;
+  background-color: #fdfdfd;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  transition: box-shadow 0.3s ease;
 }
 
 .pedido-item:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.9);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
 }
 
 .pedido-header {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 12px;
-  font-weight: 600;
-  color: #ddd;
-  font-size: 16px;
+  font-weight: bold;
+  margin-bottom: 10px;
+  color: #333;
 }
 
-.pedido-id {
-  color: #ccc;
-}
-
-.pedido-cantidad {
-  background-color: #444;
-  padding: 4px 10px;
-  border-radius: 15px;
+.pedido-estado {
   font-size: 14px;
-  color: #eee;
-  user-select: none;
+  color: #888;
 }
 
-.pedido-body p {
-  margin: 6px 0;
-  color: #bbb;
+.productos-list {
+  list-style: none;
+  padding-left: 0;
+  margin-top: 10px;
+}
+
+.producto-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.producto-imagen {
+  width: 60px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-right: 10px;
+  border: 1px solid #ddd;
+}
+
+.producto-detalles {
   font-size: 15px;
-  line-height: 1.4;
+  color: #444;
 }
 
-.pedido-body strong {
-  color: #fff;
+.acciones-pedido {
+  margin-top: 15px;
 }
 
 .acciones-pedido button {
-  margin-top: 10px;
-  margin-right: 8px;
-  padding: 6px 14px;
-  font-size: 14px;
-  font-weight: bold;
-  border: none;
-  border-radius: 6px;
-  background-color: #3a8;
+  background-color: #3498db;
   color: white;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-weight: 500;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: background-color 0.3s, transform 0.2s;
+  margin-right: 10px;
 }
 
 .acciones-pedido button:hover {
-  background-color: #2a6;
+  background-color: #2980b9;
+  transform: translateY(-1px);
 }
+
+.loading,
+.no-pedidos {
+  text-align: center;
+  color: #555;
+  font-size: 16px;
+  margin: 20px 0;
+}
+
+.error {
+  text-align: center;
+  color: #e74c3c;
+  font-weight: 500;
+  font-size: 16px;
+  margin: 20px 0;
+}
+
+/* Estilos adicionales por estado */
+.btn-aprobar {
+  background-color: #2ecc71;
+}
+
+.btn-aprobar:hover {
+  background-color: #27ae60;
+}
+
+.btn-camino {
+  background-color: #f39c12;
+}
+
+.btn-camino:hover {
+  background-color: #e67e22;
+}
+
+.btn-entregado {
+  background-color: #8e44ad;
+}
+
+.btn-entregado:hover {
+  background-color: #71368a;
+}
+
+
+  .btn-descargar-factura {
+    display: inline-block;
+    margin-top: 0.5rem;
+    padding: 0.5rem 1rem;
+    background-color: #2c3e50;
+    color: white;
+    border-radius: 4px;
+    text-decoration: none;
+  }
+
+  .btn-descargar-factura:hover {
+    background-color: #1a252f;
+  }
 </style>

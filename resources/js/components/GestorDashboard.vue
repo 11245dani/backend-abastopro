@@ -3,8 +3,7 @@
     <!-- Header -->
     <header class="header">
       <div class="logo-text">
-        <img src="@/images/Logo.jpeg" alt="Logo AbastoPro" />
-        AbastoPro
+        <img src="@/images/logoname.png" alt="Logo AbastoPro" />
       </div>
 
       <div class="user-menu" @click="toggleMenu">
@@ -24,9 +23,6 @@
     <div class="main-container">
       <!-- Panel lateral -->
       <aside class="Gestor-panel">
-        <div class="logo-text">
-          <img src="@/images/Logo.jpeg" alt="Logo AbastoPro" />
-        </div>
         <ul class="menu">
           <li @click="irADashboard">Mis productos</li>
            <li @click="irAPedidos">Pedidos</li> <!-- Cambio aquí -->
@@ -148,16 +144,19 @@ console.log('GestorDashboard montado'); // <-- Confirmación
   font-weight: 600;
   margin: 0;
   color: #111;
+   font-family: Arial, sans-serif;
 }
 
 .contenedor-productos-activos.reducido .subtexto {
   font-size: 12px;
   color: #666;
   margin: 4px 0 0 0;
+   font-family: Arial, sans-serif;
 }
 
 .contenedor-productos-activos.reducido .contenido {
   text-align: right;
+   font-family: Arial, sans-serif;
 }
 
 .cantidad-mini {
@@ -168,8 +167,8 @@ console.log('GestorDashboard montado'); // <-- Confirmación
 }
 
 .btn-ver-mini {
-  background-color: #222;
-  color: white;
+  background-color: #99D7A9;
+  color: black;
   padding: 6px 12px;
   border: none;
   border-radius: 8px;
@@ -189,6 +188,7 @@ console.log('GestorDashboard montado'); // <-- Confirmación
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+   font-family: Arial, sans-serif;
 }
 
 .main-container {
@@ -203,6 +203,7 @@ console.log('GestorDashboard montado'); // <-- Confirmación
   align-items: center;
   padding: 15px 20px;
   background-color: white;
+   font-family: Arial, sans-serif;
 }
 
 .logo-text {
@@ -252,7 +253,7 @@ console.log('GestorDashboard montado'); // <-- Confirmación
 }
 
 .dropdown li:hover {
-  background-color: #f0f0f0;
+  background-color: #99D7A9;
 }
 
 /* Panel lateral */
@@ -297,11 +298,12 @@ console.log('GestorDashboard montado'); // <-- Confirmación
   font-size: 18px;
   font-weight: 500;
   margin: 0;
+   font-family: Arial, sans-serif;
 }
 
 .btn-anadir {
-  background-color: black;
-  color: white;
+  background-color: #99D7A9;
+  color: black;
   border: none;
   padding: 10px 20px;
   border-radius: 6px;
@@ -311,6 +313,6 @@ console.log('GestorDashboard montado'); // <-- Confirmación
 }
 
 .btn-anadir:hover {
-  background-color: #333;
+  background-color: #89c196;
 }
 </style>

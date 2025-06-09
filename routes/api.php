@@ -12,6 +12,8 @@ use App\Http\Controllers\API\ForgotPasswordController;
 use App\Http\Controllers\ResetPasswordController;
 use App\Http\Controllers\CarritoController;
 use App\Http\Controllers\PedidoControllerr;
+use App\Http\Controllers\SubpedidoController;
+
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
@@ -23,14 +25,15 @@ Route::get('/marcas', [MarcaController::class, 'index']);
 Route::post('marcas', [MarcaController::class, 'store']);
 Route::post('categorias', [CategoriaController::class, 'store']);
 
-Route::middleware('auth:sanctum')->put('/pedidos/{id}/estado', [PedidoControllerr::class, 'actualizarEstado']);
+Route::middleware('auth:sanctum')->put('/pedidos/{id}/estado', [PedidoController::class, 'actualizarEstado']);
 
 Route::get('/productos-disponibles', [ProductoController::class, 'listarDisponibles']);
 
-Route::middleware('auth:sanctum')->get('/historial-pedidos', [PedidoControllerr::class, 'historialPedidosTienda']);
+Route::middleware('auth:sanctum')->get('/historial-pedidos', [PedidoController::class, 'historialPedidosTienda']);
 
 // routes/api.php
 Route::middleware('auth:sanctum')->patch('/pedidos/{id}/estado', [PedidoControllerr::class, 'cambiarEstado']);
+Route::put('/pedidos/{id}/confirmar', [PedidoController::class, 'confirmar']);
 
 
 Route::middleware('auth:sanctum')->group(function () {
@@ -38,11 +41,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::middleware('auth:sanctum')->put('/usuario/actualizar', [AuthController::class, 'actualizarUsuario']);
     Route::put('/admin/aprobar-gestor-despacho/{id}', [AdminController::class, 'aprobarGestorDespacho']);
+    Route::put('/admin/rechazar-gestor-despacho/{id}', [AdminController::class, 'rechazarGestorDespacho']);
      Route::get('/carrito', [CarritoController::class, 'ver']);
     Route::post('/carrito/agregar', [CarritoController::class, 'agregar']);
     Route::delete('/carrito/eliminar/{item}', [CarritoController::class, 'eliminar']);
     Route::post('/carrito/confirmar', [CarritoController::class, 'confirmar']);
-    Route::get('/pedidos-distribuidor', [PedidoControllerr::class, 'pedidosDistribuidor']);
+    Route::get('/pedidos-distribuidor', [PedidoController::class, 'pedidosDistribuidor']);
 
 });
 
@@ -75,4 +79,7 @@ Route::middleware(['auth:sanctum', 'gestor'])->group(function () {
 
 Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLinkEmail']);
 
-
+Route::middleware('auth:sanctum')->get('/pedidos/tienda', [PedidoControllerr::class, 'pedidosTienda']);
+Route::middleware('auth:sanctum')->get('/pedidos/distribuidor', [SubpedidoController::class, 'pedidosDistribuidor']);
+Route::patch('/subpedidos/{id}/estado', [SubpedidoController::class, 'actualizarEstado']);
+Route::get('/factura/{subpedido}', [SubpedidoController::class, 'descargarFactura']);

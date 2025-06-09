@@ -78,54 +78,86 @@ class CarritoController extends Controller
         return response()->json(['message' => 'Producto eliminado del carrito']);
     }
 
-    public function confirmar(Request $request)
-    {
-        $usuario = $request->user();
+public function confirmar(Request $request)
+{
+    $usuario = $request->user();
+    $productos = $request->input('productos'); // Array de productos con id y cantidad
 
-        if (!$usuario->tienda || !$usuario->tienda) {
-            return response()->json(['message' => 'El usuario no es un tendero válido.'], 403);
-        }
-
-        $carrito = Carrito::where('tienda_id', $usuario->tienda->id)
-            ->with('items.producto')
-            ->first();
-
-        if (!$carrito || $carrito->items->isEmpty()) {
-            return response()->json(['message' => 'Carrito vacío'], 400);
-        }
-
-        DB::beginTransaction();
-        try {
-            $itemsAgrupados = $carrito->items->groupBy(function ($item) {
-                return $item->producto->distribuidor_id;
-            });
-
-            foreach ($itemsAgrupados as $distribuidor_id => $items) {
-                $pedido = Pedido::create([
-                    'tienda_id' => $usuario->tienda->id,
-                    'estado' => 'pendiente',
-                ]);
-
-                foreach ($items as $item) {
-                    DetallePedido::create([
-                        'pedido_id' => $pedido->id,
-                        'producto_id' => $item->producto_id,
-                        'cantidad' => $item->cantidad,
-                        'precio_unitario' => $item->producto->precio,
-                    ]);
-                }
-
-                // Aquí podrías notificar al distribuidor si se desea
-            }
-
-            // Vaciar carrito
-            $carrito->items()->delete();
-
-            DB::commit();
-            return response()->json(['message' => 'Pedido confirmado y enviado a distribuidores']);
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return response()->json(['message' => 'Error al confirmar pedido', 'error' => $e->getMessage()], 500);
-        }
+    if (!$productos || !is_array($productos)) {
+        return response()->json(['message' => 'Productos inválidos.'], 400);
     }
+
+    if (!$usuario->tienda) {
+        return response()->json(['message' => 'El usuario no es un tendero válido.'], 403);
+    }
+
+    // Obtener carrito con productos y su distribuidor
+    $carrito = Carrito::where('tienda_id', $usuario->tienda->id)
+        ->with(['items.producto.distribuidor']) // Asegura que el distribuidor esté cargado
+        ->first();
+
+    if (!$carrito || $carrito->items->isEmpty()) {
+        return response()->json(['message' => 'Carrito vacío'], 400);
+    }
+
+    // Mapear los productos recibidos para validar cantidades
+    $productoMapeado = collect($productos)->keyBy('id'); // id => ['id' => ..., 'cantidad' => ...]
+
+    // Filtrar ítems del carrito que coincidan con los productos enviados y tengan distribuidor
+    $itemsValidos = $carrito->items->filter(function ($item) use ($productoMapeado) {
+        return $item->producto && $item->producto->distribuidor_id && $productoMapeado->has($item->producto_id);
+    });
+
+    if ($itemsValidos->isEmpty()) {
+        return response()->json(['message' => 'No hay productos válidos para confirmar'], 400);
+    }
+
+    // Actualizar las cantidades de los ítems con lo enviado por el frontend
+    foreach ($itemsValidos as $item) {
+        $cantidadSolicitada = $productoMapeado[$item->producto_id]['cantidad'];
+        $item->cantidad = $cantidadSolicitada;
+    }
+
+    DB::beginTransaction();
+    try {
+        // 1. Crear pedido general
+        $pedido = Pedido::create([
+            'tienda_id' => $usuario->tienda->id,
+            'estado' => 'pendiente',
+            'fecha' => now(),
+        ]);
+
+        // 2. Agrupar por distribuidor
+        $itemsAgrupados = $itemsValidos->groupBy(fn($item) => $item->producto->distribuidor_id);
+
+        // 3. Crear subpedidos con detalles
+        foreach ($itemsAgrupados as $distribuidor_id => $items) {
+            if ($items->isEmpty()) continue;
+
+            $subpedido = $pedido->subpedidos()->create([
+                'distribuidor_id' => $distribuidor_id,
+                'estado' => 'pendiente',
+            ]);
+
+            foreach ($items as $item) {
+                $subpedido->detalles()->create([
+                    'producto_id' => $item->producto_id,
+                    'cantidad' => $item->cantidad,
+                    'precio_unitario' => $item->producto->precio,
+                ]);
+            }
+        }
+
+        // 4. Vaciar el carrito
+        $carrito->items()->delete();
+
+        DB::commit();
+        return response()->json(['message' => 'Pedido confirmado y enviado a distribuidores']);
+    } catch (\Exception $e) {
+        DB::rollBack();
+        return response()->json(['message' => 'Error al confirmar pedido', 'error' => $e->getMessage()], 500);
+    }
+}
+
+
 }
