@@ -141,11 +141,13 @@ const enviarFormulario = async () => {
 .formulario-actualizar {
   padding: 30px;
   max-width: 600px;
-  margin: auto;
-  background: linear-gradient(to right, #f0f2f5, #dfe9f3);
+  margin: 40px auto;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px);
   border-radius: 20px;
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
   animation: slideIn 0.8s ease-out;
+  border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 @keyframes slideIn {
@@ -162,13 +164,13 @@ const enviarFormulario = async () => {
 h2 {
   text-align: center;
   font-size: 28px;
-  color: #34495e;
+  color: #2c3e50;
   margin-bottom: 10px;
 }
 
 .subtitulo {
   text-align: center;
-  color: #666;
+  color: #555;
   margin-bottom: 25px;
   font-size: 15px;
 }
@@ -179,14 +181,17 @@ form {
 }
 
 .campo {
-  margin-bottom: 18px;
+  margin-bottom: 22px;
   transition: all 0.3s ease;
+  padding: 10px 15px;
+  border-radius: 14px;
+  background: #f9f9f9;
+  border: 1px solid #e0e0e0;
 }
 
 .campo.cambiado {
   border-left: 5px solid #4a90e2;
-  padding-left: 10px;
-  background-color: #f0f8ff;
+  background-color: #eef6ff;
 }
 
 label {
@@ -194,6 +199,7 @@ label {
   margin-bottom: 5px;
   display: block;
   color: #2c3e50;
+  font-size: 15px;
 }
 
 input {
@@ -202,41 +208,58 @@ input {
   border: 1px solid #ccc;
   border-radius: 10px;
   font-size: 16px;
+  background-color: #fff;
   transition: border 0.3s, box-shadow 0.3s;
 }
 
 input:focus {
   outline: none;
   border-color: #4a90e2;
-  box-shadow: 0 0 8px rgba(74, 144, 226, 0.3);
-  transform: scale(1.02);
+  box-shadow: 0 0 10px rgba(74, 144, 226, 0.2);
+  background-color: #f4faff;
 }
 
 .advertencia {
   margin-top: 15px;
   background-color: #fff3cd;
   color: #856404;
-  padding: 12px;
-  border-left: 5px solid #ffa502;
-  border-radius: 8px;
+  padding: 14px;
+  border-left: 6px solid #ffa502;
+  border-radius: 10px;
   font-size: 15px;
   animation: fadeIn 0.5s ease-in-out;
 }
 
 .btn-guardar {
-  padding: 12px;
-  background-color: #4a90e2;
+  padding: 14px;
+  background: linear-gradient(to right, #4a90e2, #357ab8);
   color: white;
   font-weight: bold;
-  font-size: 16px;
+  font-size: 17px;
   border: none;
-  border-radius: 14px;
+  border-radius: 18px;
   cursor: pointer;
-  transition: background-color 0.3s ease, transform 0.2s ease;
+  transition: background 0.3s ease, transform 0.2s ease;
 }
 
 .btn-guardar:hover {
-  background-color: #357ab8;
+  background: linear-gradient(to right, #357ab8, #2d6db2);
   transform: translateY(-2px);
+}
+
+/* Responsive para móviles */
+@media (max-width: 600px) {
+  .formulario-actualizar {
+    padding: 20px;
+  }
+
+  h2 {
+    font-size: 22px;
+  }
+
+  .btn-guardar {
+    font-size: 15px;
+    padding: 12px;
+  }
 }
 </style>
