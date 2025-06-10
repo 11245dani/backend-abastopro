@@ -17,8 +17,6 @@ import HistorialPedidos from './components/HistorialPedidos.vue';
 import ForgotPassword from './components/ForgotPassword.vue';
 
 
-
-
 const routes = [
   { path: '/', component: Home },
   { path: '/registro', component: Registro },
