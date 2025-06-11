@@ -17,15 +17,15 @@
           <div class="account-type">
             <button 
               type="button"
-              :class="{ active: tipoRegistro === 'tienda' }" 
-              @click="tipoRegistro = 'tienda'"
+              :class="{ active: form.rol === 'tendero' }" 
+              @click="setRol('tendero')"
             >
               Tienda
             </button>
             <button 
               type="button"
-              :class="{ active: tipoRegistro === 'distribuidor' }" 
-              @click="tipoRegistro = 'distribuidor'"
+              :class="{ active: form.rol === 'gestor_despacho' }" 
+              @click="setRol('gestor_despacho')"
             >
               Distribuidor
             </button>
@@ -75,8 +75,8 @@
             />
           </div>
 
-          <!-- Campos específicos para Tienda -->
-          <div class="form-group" v-if="tipoRegistro === 'tienda'">
+          <!-- Campo de dirección para Tienda -->
+          <div class="form-group" v-if="form.rol === 'tendero'">
             <label for="direccion">Dirección de la tienda</label>
             <input 
               type="text" 
@@ -88,7 +88,7 @@
           </div>
 
           <!-- Campos específicos para Distribuidor -->
-          <template v-if="tipoRegistro === 'distribuidor'">
+          <template v-if="form.rol === 'gestor_despacho'">
             <div class="form-group">
               <label for="nombre_empresa">Nombre de la Empresa</label>
               <input 
@@ -101,11 +101,11 @@
             </div>
 
             <div class="form-group">
-              <label for="direccion_empresa">Dirección de la empresa</label>
+              <label for="direccion">Dirección de la empresa</label>
               <input 
                 type="text" 
-                id="direccion_empresa" 
-                v-model="form.direccion_empresa" 
+                id="direccion" 
+                v-model="form.direccion" 
                 placeholder="Dirección de la empresa" 
                 required 
               />
@@ -113,7 +113,7 @@
           </template>
 
           <button type="submit" class="submit-btn">
-            Registrarse como {{ tipoRegistro === 'tienda' ? 'Tienda' : 'Distribuidor' }}
+            Registrarse como {{ form.rol === 'tendero' ? 'Tienda' : 'Distribuidor' }}
           </button>
 
           <div v-if="mensaje" class="message" :class="{ error: mensajeColor === 'red' }">
@@ -130,51 +130,73 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 import axios from 'axios'
 
-const route = useRoute()
-const tipoRegistro = ref(route.query.tipo || 'tienda')
+const router = useRouter()
 
 const form = ref({
   nombre: '',
   correo: '',
   password: '',
-  telefono: '',
+  rol: 'tendero',
   direccion: '',
   nombre_empresa: '',
-  direccion_empresa: '',
-  tipo: tipoRegistro.value
+  telefono: ''
 })
 
 const mensaje = ref('')
 const mensajeColor = ref('green')
 
-onMounted(() => {
-  // Validar que el tipo de registro sea válido
-  if (!['tienda', 'distribuidor'].includes(tipoRegistro.value)) {
-    tipoRegistro.value = 'tienda'
-  }
-})
+function setRol(rol) {
+  form.value.rol = rol
+}
 
 async function registrarUsuario() {
+  mensaje.value = ''
+
+  const payload = { ...form.value }
+
+  if (payload.rol === 'tendero') {
+    delete payload.nombre_empresa
+  }
+
   try {
-    // Configurar el tipo en el formulario
-    form.value.tipo = tipoRegistro.value
-    
-    const response = await axios.post('http://127.0.0.1:8000/api/register', form.value)
-    
-    mensaje.value = 'Registro exitoso!'
+    const res = await axios.post('http://127.0.0.1:8000/api/register', payload, {
+      headers: {
+        Accept: 'application/json'
+      }
+    })
+
+    mensaje.value = '¡Registro exitoso! Verifica tu correo electrónico.'
     mensajeColor.value = 'green'
-    
+
+    // Limpiar formulario
+    form.value = {
+      nombre: '',
+      correo: '',
+      password: '',
+      rol: 'tendero',
+      direccion: '',
+      nombre_empresa: '',
+      telefono: ''
+    }
+
     // Redirigir después de 2 segundos
     setTimeout(() => {
       router.push('/login')
     }, 2000)
-    
+
   } catch (error) {
-    mensaje.value = error.response?.data?.message || 'Error en el registro'
+    if (error.response?.data?.errors) {
+      const errores = Object.values(error.response.data.errors).flat().join(', ')
+      mensaje.value = errores
+    } else if (error.response?.data?.mensaje) {
+      mensaje.value = error.response.data.mensaje
+    } else {
+      mensaje.value = 'Error desconocido'
+    }
     mensajeColor.value = 'red'
   }
 }
