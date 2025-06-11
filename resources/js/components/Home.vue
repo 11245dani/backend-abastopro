@@ -4,9 +4,8 @@
       <div class="logo-text">
         <img src="@/images/logoname.png" alt="Logo AbastoPro" class="logo-image" />
       </div>
-      <nav>
-        
-        <a href="/Login">Iniciar sesión</a>
+      <nav class="nav">
+        <button class="btn-login" @click="goToLogin">INICIAR SESIÓN</button>
         <button class="btn-register" @click="goToRegister">REGISTRARSE</button>
       </nav>
     </header>
@@ -20,10 +19,10 @@
             tiendas y distribuidores, optimizando el proceso de pedidos y entregas.
           </p>
           <div class="btn-group">
-            <button class="btn-shop">
+            <button class="btn-shop" @click="goToAbout">
               MÁS SOBRE NOSOTROS
             </button>
-            <button class="btn-distributor">
+            <button class="btn-distributor" @click="goToHowItWorks">
               CÓMO FUNCIONA
             </button>
           </div>
@@ -53,6 +52,18 @@ const router = useRouter()
 
 function goToRegister() {
   router.push('/registro')
+}
+
+function goToLogin() {
+  router.push('/Login')
+}
+
+function goToAbout() {
+  router.push('/about')
+}
+
+function goToHowItWorks() {
+  router.push('/how-it-works')
 }
 </script>
 
@@ -172,7 +183,7 @@ function goToRegister() {
   width: 100%;
 }
 
-.btn-register {
+.btn-register, .btn-login {
   padding: 0.75rem 1.5rem;
   border: none;
   background-color: var(--secondary-color);
@@ -187,7 +198,7 @@ function goToRegister() {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.btn-register:hover {
+.btn-register:hover, .btn-login:hover {
   background-color: #7da97d;
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
@@ -221,7 +232,7 @@ function goToRegister() {
 .main-title {
   font-size: 2.5rem;
   margin-bottom: 1.5rem;
-  color: var(--primary-color);
+  color: #184e3c;
   font-weight: 700;
   line-height: 1.3;
   position: relative;

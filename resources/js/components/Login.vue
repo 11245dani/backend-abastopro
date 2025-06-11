@@ -159,7 +159,7 @@ export default {
   top: 30px;
   left: 30px;
   padding: 10px 20px;
-  background-color: #8FBC8F;
+  background-color: #7da97d;
   color: white;
   border: none;
   border-radius: 5px;
@@ -185,7 +185,7 @@ export default {
 
 .logo-section {
   flex: 1;
-  background-color: #8FBC8F;
+  background-color:#7da97d;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -247,7 +247,7 @@ h2 {
 
 .forgot {
   font-size: 12px;
-  color: #8FBC8F;
+  color: #7da97d;
   text-decoration: none;
   font-weight: 400;
   transition: color 0.2s;
@@ -268,7 +268,7 @@ input {
 
 input:focus {
   outline: none;
-  border-color: #8FBC8F;
+  border-color: #7da97d;
 }
 
 .account-type {
@@ -290,15 +290,15 @@ input:focus {
 }
 
 .account-type button.active {
-  background-color: #8FBC8F;
+  background-color: #7da97d;
   color: #141312;
-  border-color: #8FBC8F;
+  border-color: #7da97d;
 }
 
 .submit-btn {
   width: 100%;
   padding: 14px;
-  background-color: #8FBC8F;
+  background-color: #7da97d;
   color: #141312;
   border: none;
   border-radius: 5px;
@@ -321,7 +321,7 @@ input:focus {
 }
 
 .register {
-  color: #8FBC8F;
+  color: #7da97d;
   text-decoration: underline;
   cursor: pointer;
   font-weight: 500;
