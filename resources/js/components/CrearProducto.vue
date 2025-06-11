@@ -218,39 +218,38 @@ const crearProducto = async () => {
 
 <style scoped>
 .crear-producto {
-  max-width: 650px;
+  max-width: 700px;
   margin: 40px auto;
-  background: #fff;
-  border-radius: 14px;
-  padding: 30px 40px;
-  box-shadow: 0 12px 25px rgba(0,0,0,0.12);
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 32px 42px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.1);
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   color: #222;
   transition: box-shadow 0.3s ease;
 }
+
 .crear-producto:hover {
-  box-shadow: 0 18px 40px rgba(0,0,0,0.18);
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.18);
 }
 
 h2 {
   font-weight: 700;
-  font-size: 28px;
-  margin-bottom: 25px;
+  font-size: 30px;
+  margin-bottom: 30px;
   color: #111;
-  user-select: none;
 }
 
-/* Secciones para nueva categoría y marca */
+/* Secciones adicionales */
 .form-section {
-  margin-bottom: 28px;
+  margin-bottom: 30px;
 }
 
 label {
   display: block;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
   font-weight: 600;
   color: #444;
-  user-select: none;
 }
 
 .input-group {
@@ -260,43 +259,48 @@ label {
 
 .input-group input {
   flex: 1;
-  padding: 12px 15px;
-  border-radius: 10px;
+  padding: 12px 16px;
+  border-radius: 12px;
   border: 1.8px solid #ccc;
   font-size: 15px;
-  transition: border-color 0.3s ease;
-  background: #fafafa;
-  color: #222;
+  background: #f9f9f9;
+  transition: all 0.3s ease;
 }
 .input-group input:focus {
-  border-color: #222;
+  border-color: #000;
   background: #fff;
   outline: none;
 }
 
 .btn-secondary {
-  background: #222;
-  color: #f5f5f5;
+  background: #444;
+  color: #fff;
   border: none;
-  border-radius: 10px;
+  border-radius: 12px;
   padding: 12px 18px;
   font-weight: 600;
   cursor: pointer;
-  box-shadow: 0 5px 12px rgba(0,0,0,0.1);
+  box-shadow: 0 5px 12px rgba(0, 0, 0, 0.08);
   transition: background-color 0.25s ease, transform 0.25s ease;
 }
 .btn-secondary:hover {
-  background: #555;
+  background: #666;
   transform: translateY(-2px);
 }
 
 /* Formulario principal */
 .form-main .form-group {
-  margin-bottom: 22px;
+  margin-bottom: 24px;
 }
 
-.form-main label {
-  color: #555;
+.form-row {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+.form-row .form-group {
+  flex: 1;
 }
 
 input, select, textarea {
@@ -305,10 +309,9 @@ input, select, textarea {
   border-radius: 12px;
   border: 1.5px solid #ccc;
   font-size: 16px;
+  background: #f9f9f9;
   color: #222;
-  background: #fafafa;
   transition: border-color 0.3s ease, background-color 0.3s ease;
-  resize: vertical;
 }
 
 input:focus, select:focus, textarea:focus {
@@ -317,13 +320,8 @@ input:focus, select:focus, textarea:focus {
   outline: none;
 }
 
-.form-row {
-  display: flex;
-  gap: 20px;
-}
-
-.form-row .form-group {
-  flex: 1;
+textarea {
+  resize: vertical;
 }
 
 .btn-primary {
@@ -336,19 +334,25 @@ input:focus, select:focus, textarea:focus {
   border-radius: 14px;
   border: none;
   cursor: pointer;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.18);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
   transition: background-color 0.3s ease, box-shadow 0.3s ease, transform 0.25s ease;
-  user-select: none;
 }
 
 .btn-primary:hover {
   background-color: #222;
-  box-shadow: 0 12px 30px rgba(0,0,0,0.3);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
   transform: translateY(-3px);
 }
 
 .btn-primary:active {
   transform: translateY(0);
-  box-shadow: 0 6px 15px rgba(0,0,0,0.15);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+}
+
+/* Vista previa imagen */
+.preview img {
+  border-radius: 10px;
+  margin-top: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 </style>
