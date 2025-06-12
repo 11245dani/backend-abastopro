@@ -15,8 +15,7 @@
         <div class="main-text">
           <h1 class="main-title">Conectamos Tiendas con Distribuidores</h1>
           <p class="main-description">
-            Nuestra plataforma facilita la conexión entre
-            tiendas y distribuidores, optimizando el proceso de pedidos y entregas.
+            Con AbastoPro, perdir a las distribuidoras es tan fácil como hacer clic. Olvidate de esperar visitas.
           </p>
           <div class="btn-group">
             <button class="btn-shop" @click="goToAbout">
