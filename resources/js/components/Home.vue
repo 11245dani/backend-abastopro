@@ -34,12 +34,6 @@
     </main>
 
     <footer>
-      <div class="logo-footer">
-        <div class="logo-container">
-          <img src="@/images/Logo.jpeg" alt="Logo footer" />
-          <span class="logo-name">ABASTOPRO</span>
-        </div>
-      </div>
       <div>© 2025 AbastoPro. Todos los derechos reservados.</div>
     </footer>
   </div>
@@ -329,7 +323,7 @@ function goToHowItWorks() {
 }
 
 /* Footer */
-.footer {
+footer {
   text-align: center;
   padding: 2.5rem;
   border-top: 1px solid var(--border-color);

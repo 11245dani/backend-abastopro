@@ -75,7 +75,7 @@
             />
           </div>
 
-          <!-- Campo de dirección para Tienda -->
+          
           <div class="form-group" v-if="form.rol === 'tendero'">
             <label for="direccion">Dirección de la tienda</label>
             <input 
@@ -87,7 +87,7 @@
             />
           </div>
 
-          <!-- Campos específicos para Distribuidor -->
+          
           <template v-if="form.rol === 'gestor_despacho'">
             <div class="form-group">
               <label for="nombre_empresa">Nombre de la Empresa</label>
@@ -172,7 +172,7 @@ async function registrarUsuario() {
     mensaje.value = '¡Registro exitoso! Verifica tu correo electrónico.'
     mensajeColor.value = 'green'
 
-    // Limpiar formulario
+    
     form.value = {
       nombre: '',
       correo: '',
@@ -183,7 +183,7 @@ async function registrarUsuario() {
       telefono: ''
     }
 
-    // Redirigir después de 2 segundos
+    
     setTimeout(() => {
       router.push('/login')
     }, 2000)
