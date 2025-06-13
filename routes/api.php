@@ -13,6 +13,8 @@ use App\Http\Controllers\ResetPasswordController;
 use App\Http\Controllers\CarritoController;
 use App\Http\Controllers\PedidoControllerr;
 use App\Http\Controllers\SubpedidoController;
+use App\Http\Controllers\PedidoController;
+use App\Http\Controllers\GestorController;
 
 
 Route::post('/register', [AuthController::class, 'register']);
@@ -83,3 +85,6 @@ Route::middleware('auth:sanctum')->get('/pedidos/tienda', [PedidoControllerr::cl
 Route::middleware('auth:sanctum')->get('/pedidos/distribuidor', [SubpedidoController::class, 'pedidosDistribuidor']);
 Route::patch('/subpedidos/{id}/estado', [SubpedidoController::class, 'actualizarEstado']);
 Route::get('/factura/{subpedido}', [SubpedidoController::class, 'descargarFactura']);
+
+Route::middleware(['auth:sanctum'])->get('/gestor/pedidos-nuevos', [PedidoController::class, 'totalPedidosNuevos']);
+Route::middleware('auth:sanctum')->get('/gestor/informes', [GestorController::class, 'obtenerInformes']);

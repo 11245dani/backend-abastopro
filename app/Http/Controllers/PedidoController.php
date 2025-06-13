@@ -79,7 +79,24 @@ public function historialPedidosTienda()
     return response()->json($pedidos);
 }
 
+public function totalPedidosNuevos()
+{
+    $usuario = auth()->user();
 
+    if ($usuario->rol !== 'gestor_despacho') {
+        return response()->json(['error' => 'No autorizado'], 403);
+    }
+
+    // Obtener el ID del distribuidor asociado al gestor de despacho
+    $distribuidorId = $usuario->distribuidor->id;
+
+    // Contar los subpedidos pendientes asignados a este distribuidor
+    $totalNuevos = \App\Models\Subpedido::where('distribuidor_id', $distribuidorId)
+        ->where('estado', 'pendiente')
+        ->count();
+
+    return response()->json(['total_nuevos' => $totalNuevos]);
+}
 
 
 }
