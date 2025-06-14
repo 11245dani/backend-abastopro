@@ -151,7 +151,7 @@ class ProductosSeeder extends Seeder
                 'distribuidor_id' => $distribuidor->id,
                 'nombre' => $nombreUnico,
                 'descripcion' => $productoBase['descripcion'] . ' - Marca: ' . $marca->nombre,
-                'imagen_url' => null, // Sin imagen por defecto
+                'imagen_url' => 'storage/productos/default-image.png', // Sin imagen por defecto
                 'precio' => rand($productoBase['precio_min'], $productoBase['precio_max']),
                 'stock' => rand(10, 100), // Stock aleatorio entre 10 y 100
                 'categoria_id' => $categoria->id,
