@@ -226,7 +226,7 @@ const irAMisPedidos = () => {
   font-size: 18px;
   font-weight: 500;
   margin: 0;
-  font-family: Arial,sans-serif;;
+  font-family:'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;;
 }
 
 .btn-ver {

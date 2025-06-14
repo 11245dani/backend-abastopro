@@ -2,12 +2,10 @@
   <div class="page-container">
     <header class="header">
       <div class="logo-text">
-        <div class="logo-container">
-          <span class="logo-name">ABASTOPRO</span>
-        </div>
+        <img src="@/images/logoname.png" alt="Logo AbastoPro" class="logo-image" />
       </div>
       <nav class="nav">
-        <a href="/Login" class="nav-link">Iniciar sesión</a>
+        <button class="btn-login" @click="goToLogin">INICIAR SESIÓN</button>
         <button class="btn-register" @click="goToRegister">REGISTRARSE</button>
       </nav>
     </header>
@@ -17,14 +15,13 @@
         <div class="main-text">
           <h1 class="main-title">Conectamos Tiendas con Distribuidores</h1>
           <p class="main-description">
-            Nuestra plataforma facilita la conexión entre
-            tiendas y distribuidores, optimizando el proceso de pedidos y entregas.
+            Con AbastoPro, perdir a las distribuidoras es tan fácil como hacer clic. Olvidate de esperar visitas.
           </p>
           <div class="btn-group">
-            <button class="btn-shop">
+            <button class="btn-shop" @click="goToAbout">
               MÁS SOBRE NOSOTROS
             </button>
-            <button class="btn-distributor">
+            <button class="btn-distributor" @click="goToHowItWorks">
               CÓMO FUNCIONA
             </button>
           </div>
@@ -35,16 +32,8 @@
       </div>
     </main>
 
-    <footer class="footer">
-      <div class="footer-content">
-        <div class="logo-footer">
-          <div class="logo-container">
-            <img src="@/images/Logo.jpeg" alt="Logo footer" class="footer-logo" />
-            <span class="logo-name">ABASTOPRO</span>
-          </div>
-        </div>
-        <div class="copyright">© 2025 AbastoPro. Todos los derechos reservados.</div>
-      </div>
+    <footer>
+      <div>© 2025 AbastoPro. Todos los derechos reservados.</div>
     </footer>
   </div>
 </template>
@@ -56,6 +45,18 @@ const router = useRouter()
 
 function goToRegister() {
   router.push('/registro')
+}
+
+function goToLogin() {
+  router.push('/Login')
+}
+
+function goToAbout() {
+  router.push('/about')
+}
+
+function goToHowItWorks() {
+  router.push('/how-it-works')
 }
 </script>
 
@@ -122,6 +123,12 @@ function goToRegister() {
   transform: scale(1.05);
 }
 
+.logo-image {
+  height: 40px;
+  width: auto;
+  object-fit: contain;
+}
+
 .logo-name {
   text-transform: uppercase;
   font-weight: 700;
@@ -169,7 +176,7 @@ function goToRegister() {
   width: 100%;
 }
 
-.btn-register {
+.btn-register, .btn-login {
   padding: 0.75rem 1.5rem;
   border: none;
   background-color: var(--secondary-color);
@@ -184,7 +191,7 @@ function goToRegister() {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.btn-register:hover {
+.btn-register:hover, .btn-login:hover {
   background-color: #7da97d;
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
@@ -218,7 +225,7 @@ function goToRegister() {
 .main-title {
   font-size: 2.5rem;
   margin-bottom: 1.5rem;
-  color: var(--primary-color);
+  color: #184e3c;
   font-weight: 700;
   line-height: 1.3;
   position: relative;
@@ -315,7 +322,7 @@ function goToRegister() {
 }
 
 /* Footer */
-.footer {
+footer {
   text-align: center;
   padding: 2.5rem;
   border-top: 1px solid var(--border-color);
@@ -446,6 +453,10 @@ function goToRegister() {
   
   .hero-image {
     max-width: 100%;
+  }
+  
+  .logo-image {
+    height: 35px;
   }
 }
 </style>
