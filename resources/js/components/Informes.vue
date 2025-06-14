@@ -9,6 +9,30 @@
       <p class="subtitulo">Dashboard de métricas y rendimiento</p>
     </div>
 
+<button @click="exportarCSV" class="export-btn">
+  <i class="btn-icon">💾</i>
+  Exportar CSV
+</button>
+
+<button @click="exportarGrafica('lineVentas')" class="export-btn">
+  <i>📈</i> Exportar Gráfica Línea
+</button>
+
+<button @click="exportarGrafica('barMes')" class="export-btn">
+  <i>📊</i> Exportar Gráfica Barra
+</button>
+
+<button @click="exportarGrafica('piePedidos')" class="export-btn">
+  <i>🥧</i> Exportar Gráfica Pie
+</button>
+
+
+<button @click="exportarGraficasPDF" class="export-btn">
+  <i class="btn-icon">📄</i> Exportar Gráficas PDF
+</button>
+
+
+
     <!-- Filtros con diseño moderno -->
     <div class="filtros-container">
       <div class="filtros-card">
@@ -117,6 +141,8 @@
 import { ref, onMounted } from 'vue';
 import axios from 'axios';
 import VueApexCharts from 'vue3-apexcharts';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 
 const informes = ref({
   total_pedidos: 0,
@@ -229,6 +255,82 @@ const obtenerInformes = async () => {
   }
 };
 
+const exportarGraficasPDF = async () => {
+  const pdf = new jsPDF('p', 'mm', 'a4');
+  const charts = document.querySelectorAll('.chart-content');
+
+  for (let i = 0; i < charts.length; i++) {
+    const canvas = await html2canvas(charts[i]);
+    const imgData = canvas.toDataURL('image/png');
+    const imgProps = pdf.getImageProperties(imgData);
+    const pdfWidth = pdf.internal.pageSize.getWidth();
+    const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+    pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+
+    if (i < charts.length - 1) {
+      pdf.addPage();
+    }
+  }
+
+  const fecha = new Date().toISOString().slice(0, 10);
+  pdf.save(`graficas_informe_${fecha}.pdf`);
+};
+
+const exportarCSV = () => {
+  const fechaActual = new Date().toISOString().slice(0, 10); // formato: YYYY-MM-DD
+  const nombreArchivo = `informe_ventas_${fechaActual}.csv`;
+
+  // Encabezados
+  const encabezados = [
+    'Pedidos Aceptados',
+    'Pedidos Pendientes',
+    'Productos Vendidos',
+    'Total Ingresos (COP)'
+  ];
+
+  // Datos
+  const datos = [
+    informes.value.total_pedidos,
+    informes.value.total_pendientes,
+    informes.value.total_productos_vendidos,
+    informes.value.total_ingresos
+  ];
+
+  // Convertir a formato CSV
+  const csvContent = [
+    encabezados.join(','),    // línea de encabezado
+    datos.join(',')           // línea de datos
+  ].join('\n');
+
+  // Crear Blob y descargar
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.setAttribute('href', url);
+  link.setAttribute('download', nombreArchivo);
+  link.style.visibility = 'hidden';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+};
+
+const exportarGrafica = (chartId) => {
+  const chart = ApexCharts.getChartByID(chartId);
+  if (chart) {
+    chart.dataURI().then(({ imgURI, blob }) => {
+      const link = document.createElement('a');
+      link.href = imgURI;
+      link.download = `grafica_${chartId}.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    });
+  } else {
+    console.error('No se encontró la gráfica con ID:', chartId);
+  }
+};
+
+
 onMounted(() => obtenerInformes());
 </script>
 
@@ -239,7 +341,7 @@ onMounted(() => obtenerInformes());
 
 .informes {
   padding: 2rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #99D7A9 0%, #764ba2 100%);
   min-height: 100vh;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
@@ -250,6 +352,51 @@ onMounted(() => obtenerInformes());
   margin-bottom: 3rem;
   animation: fadeInDown 0.8s ease-out;
 }
+
+.export-btn {
+  background-color: #10B981;
+  color: white;
+  padding: 10px 15px;
+  margin-top: 10px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+.export-btn:hover {
+  background-color: #059669;
+}
+
+.export-btn {
+  background: linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%);
+  color: white;
+  border: none;
+  padding: 10px 18px;
+  margin: 5px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.export-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(99, 102, 241, 0.5);
+}
+
+.export-btn:active {
+  transform: scale(0.98);
+}
+
+.export-btn i {
+  font-style: normal;
+}
+
 
 .titulo {
   font-size: 3rem;
