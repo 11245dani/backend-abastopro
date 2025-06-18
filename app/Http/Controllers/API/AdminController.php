@@ -11,6 +11,8 @@ use App\Models\Usuario;
 use Illuminate\Support\Facades\DB;
 use App\Notifications\GestorDespachoAprobado;
 use App\Notifications\GestorRechazadoNotification;
+use App\Models\Pedido;
+use App\Models\Producto;
 
 class AdminController extends Controller
 {
@@ -133,6 +135,51 @@ public function rechazarGestorDespacho($id)
       $usuario->notify(new GestorRechazadoNotification());
 
     return response()->json(['message' => 'Gestor de despacho rechazado correctamente.']);
+}
+
+public function generarReportes(Request $request)
+{
+    $query = Pedido::with(['detalles.producto', 'tienda.usuario']);
+
+    if ($request->has('fecha_inicio') && $request->has('fecha_fin')) {
+        $query->whereBetween('created_at', [$request->fecha_inicio, $request->fecha_fin]);
+    }
+
+    if ($request->filled('producto_id')) {
+        $query->whereHas('detalles', function ($q) use ($request) {
+            $q->where('producto_id', $request->producto_id);
+        });
+    }
+
+    if ($request->filled('usuario_id')) {
+        $query->whereHas('tienda.usuario', function ($q) use ($request) {
+            $q->where('id', $request->usuario_id);
+        });
+    }
+
+    $pedidos = $query->get();
+
+    return response()->json($pedidos);
+}
+
+public function dashboard()
+{
+    $totalPedidos = Pedido::count();
+    $usuariosActivos = Usuario::whereNotNull('email_verified_at')->count();
+    $totalProductos = Producto::count();
+    
+    // Sumar total de ventas (suponiendo que tienes un campo "total" o "precio * cantidad" por pedido)
+    $ventasTotales = DB::table('detalle_pedidos')
+        ->join('productos', 'detalle_pedidos.producto_id', '=', 'productos.id')
+        ->select(DB::raw('SUM(detalle_pedidos.cantidad * productos.precio) as total'))
+        ->value('total');
+
+    return response()->json([
+        'total_pedidos' => $totalPedidos,
+        'usuarios_activos' => $usuariosActivos,
+        'total_productos' => $totalProductos,
+        'ventas_totales' => round($ventasTotales, 2),
+    ]);
 }
 
 }
